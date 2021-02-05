@@ -8,6 +8,8 @@
 */
 
 #include "utils.hpp"
+#include "log.hpp"
+#include <cstdio>
 
 void Utils::GenerateRandomSeed() {
 #ifdef WIN32
@@ -26,18 +28,22 @@ int Utils::GetRandomPositive() {
         // Gets a new seed
         Utils::GenerateRandomSeed();
     } while(number <= 0);
+	
+	return number;
 }
 
 std::string Utils::GenerateID() {
 #ifdef WIN32
     UUID uuid;
-    RPC_CSTR puuid[36];
-    char uuid_str[36];
-
+    char *uuid_str = NULL;
+	
     if(UuidCreate(&uuid) == RPC_S_OK) {
-        UuidToStringA(&uuid, puuid);
-        memcpy(uuid_str, puuid, sizeof(uuid_str));
-
+        UuidToStringA(&uuid, (RPC_CSTR*)&uuid_str);
+		auto size = strlen(uuid_str);
+		if(size != 36) {
+			Log::LogPanic("Invalid UUID generated: " + std::to_string(size));
+		}
+		
         return std::string(uuid_str);
     }
     

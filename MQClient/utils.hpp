@@ -7,6 +7,9 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
+#ifndef UTILS_HPP
+#define UTILS_HPP
+
 #include <windows.h>
 #include <string>
 
@@ -36,3 +39,5 @@ public:
 	 */
 	static std::string GenerateID();
 };
+
+#endif

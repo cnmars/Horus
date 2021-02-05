@@ -1,0 +1,23 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(MQClient)
+
+add_executable(MQClient
+    api.cc
+    command_dispatcher.cc
+    command_processor.cc
+    fs.cc
+    log.cc
+    main.cc
+    mqtt_client.cc
+    network.cc
+    tcp_client.cc
+    utils.cc
+    wrappers.cc
+)
+
+set(CMAKE_CXX_STANDARD 17)
+target_link_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)
+target_include_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include)
+target_link_libraries(MQClient wininet ws2_32 urlmon paho-mqtt3c rpcrt4)
+

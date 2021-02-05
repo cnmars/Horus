@@ -7,8 +7,8 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#ifndef FS_H
-#define FS_H
+#ifndef FS_HPP
+#define FS_HPP
 
 #include <windows.h>
 #include <string>

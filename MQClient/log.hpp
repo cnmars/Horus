@@ -7,8 +7,8 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#ifndef MQRAT_LOG_H
-#define MQRAT_LOG_H
+#ifndef MQRAT_LOG_HPP
+#define MQRAT_LOG_HPP
 
 #include <string>
 

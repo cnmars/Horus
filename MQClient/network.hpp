@@ -7,9 +7,10 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef NETWORK_HPP
+#define NETWORK_HPP
 
+#include <ws2tcpip.h>
 #include <string>
 #include <memory>
 
@@ -36,6 +37,15 @@ using namespace std;
  */
 #define IS_NULL(x) (x == nullptr)
 #endif
+
+struct ipv4_addr_info {
+	sockaddr *sock_addr;
+	string ip;
+	size_t sock_addr_len;
+	int ai_family;
+	int ai_protocol;
+	int ai_socktype;
+};
 
 /**
  * @brief Default network namespace
@@ -89,9 +99,9 @@ namespace Network {
 			 * @brief Solve the IP address of provied host
 			 * 
 			 * @param hostname Name of host
-			 * @return string Contains the ip address
+			 * @return string Contains the ip address information
 			 */
-			static string SolveIPAddress(string hostname);
+			static struct ipv4_addr_info *SolveIPAddress(string hostname);
 	};
 }
 

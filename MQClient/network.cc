@@ -8,6 +8,7 @@
 */
 
 
+#include <winsock.h>
 #include <windows.h>
 #include <wininet.h>
 #include <ws2tcpip.h>
@@ -69,14 +70,18 @@ string Network::Utils::GetExternalIPV4Addr()
 	string request = "GET " + format + header_end;
 	const int buflen = 512;
 	char *response = new char[buflen];
-	string host_addr = Network::Utils::SolveIPAddress(host);
-
-	TcpClient *client = new TcpClient(host_addr, 80);
-	if(client->Connect()) {
+	ipv4_addr_info *host_addr = Network::Utils::SolveIPAddress(host);
+	
+	if(host_addr == nullptr) {
+		Log::LogPanic("Failed to solve ip address for " + host);
+	}
+	
+	TcpClient *client = new TcpClient();
+	if(client->Connect(host_addr)) {
 		client->Send(request.c_str(), request.length());
 		client->Recv(&response, buflen);
 	} else {
-		Log::LogError("[ERROR] Failed to connect with " + host_addr);
+		Log::LogError("Failed to connect with " + host_addr->ip + " error: " + to_string(WSAGetLastError()));
 		return "";
 	}
 
@@ -87,27 +92,44 @@ string Network::Utils::GetExternalIPV4Addr()
 	return body;
 }
 
-string Network::Utils::SolveIPAddress(string hostname)
+struct ipv4_addr_info *Network::Utils::SolveIPAddress(string hostname)
 {
 	struct addrinfo hints, *result = NULL;
 	struct addrinfo *p = NULL;
+	struct ipv4_addr_info *addr = new ipv4_addr_info();
 
 	ZeroMemory(&hints, sizeof(hints));
+
+	// Load winsock library
+	Network::Utils::LoadWinsock();
 
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
-	if(getaddrinfo(hostname.c_str(), "0", &hints, &result)) {
-		Log::LogError("[ERROR] Failed: " + string(strerror(errno)) + ", error: " + to_string(WSAGetLastError()));
-		return "";
+	if(getaddrinfo(hostname.c_str(), "80", &hints, &result)) {
+		Log::LogError("Failed to getaddrinfo. Error: " + to_string(WSAGetLastError()));
+		delete addr;
+		return nullptr;
 	}
 
 	for(p = result; p != NULL; p = p->ai_next) {
 		if(p->ai_family == AF_INET) {
-			return inet_ntoa(((struct sockaddr_in*)p->ai_addr)->sin_addr);
+			addr->ip = string(inet_ntoa(((struct sockaddr_in*)p->ai_addr)->sin_addr));
+			addr->sock_addr = p->ai_addr;
+			addr->sock_addr_len = p->ai_addrlen;
+			addr->ai_family = p->ai_family;
+			addr->ai_protocol = p->ai_protocol;
+			addr->ai_socktype = p->ai_socktype;
+			return addr;
 		}
 	}
 
-    return "";
+	// Unload winsock
+	Network::Utils::FreeWinsock();
+
+	// Free used memory
+	delete addr;
+
+    return nullptr;
 }

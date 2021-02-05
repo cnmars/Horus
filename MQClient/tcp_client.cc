@@ -8,9 +8,11 @@
 */
 
 #include "tcp_client.hpp"
+#include "log.hpp"
 
 TcpClient::TcpClient()
 {
+	Network::Utils::LoadWinsock();
     this->port = 0;
     this->ip_addr = "";
     this->sock = INVALID_SOCKET;
@@ -31,24 +33,53 @@ TcpClient::~TcpClient()
 
 bool TcpClient::Initialize()
 {
-    this->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if(this->sock == INVALID_SOCKET || sock == SOCKET_ERROR)
+        this->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+   
+    return this->sock != INVALID_SOCKET;
+}
 
-    return  this->sock != INVALID_SOCKET;
+bool TcpClient::Initialize(void *addr_info)
+{
+    ipv4_addr_info *info = static_cast<ipv4_addr_info*>(addr_info);
+    if(this->sock == INVALID_SOCKET || sock == SOCKET_ERROR)
+        this->sock = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
+
+    return this->sock != INVALID_SOCKET;
 }
 
 bool TcpClient::Connect()
 {
     sockaddr_in sin;
 
-    if(this->sock == INVALID_SOCKET) {
-        this->Initialize();
-    }
+    this->Initialize();
 
     sin.sin_family = AF_INET;
     sin.sin_port = htons(this->port);
     sin.sin_addr.S_un.S_addr = inet_addr(this->ip_addr.c_str());
 
-    return connect(this->sock, (const sockaddr*)&sin, sizeof(struct sockaddr_in)) != SOCKET_ERROR;
+    Log::LogInfo("Connecting to " + this->ip_addr + ":" + to_string(this->port));
+
+    auto status = connect(this->sock, (const sockaddr*)&sin, sizeof(struct sockaddr_in));
+
+    return status != SOCKET_ERROR;
+}
+
+bool TcpClient::Connect(void *addr_info)
+{
+    ipv4_addr_info *info = static_cast<ipv4_addr_info*>(addr_info);
+    if(info != nullptr) {
+        Log::LogInfo("Connecting to: " + info->ip);
+
+        this->Initialize(addr_info);
+    
+        // Tries to connect to the server
+        auto status = connect(this->sock, info->sock_addr, info->sock_addr_len);
+        if(status != SOCKET_ERROR)
+            return true;
+    }
+
+    return false;
 }
 
 int TcpClient::Send(const void *data, size_t len)

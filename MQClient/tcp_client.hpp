@@ -7,6 +7,9 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
+#ifndef TCP_CLIENT_HPP
+#define TCP_CLIENT_HPP
+
 #include <winsock2.h>
 #include <windows.h>
 #include <string>
@@ -71,7 +74,17 @@ class TcpClient {
          * 
          */
         void Cleanup();
-    private:
+
+        /**
+         * @brief 
+         * 
+         * @param addr_info 
+         * @return true 
+         * @return false 
+         */
+        bool Connect(void *addr_info);
+
+private:
             /**
          * @brief Initializes the TCP client
          * 
@@ -80,8 +93,19 @@ class TcpClient {
          */
         bool Initialize();
 
+        /**
+         * @brief 
+         * 
+         * @param addr_info 
+         * @return true 
+         * @return false 
+         */
+        bool Initialize(void *addr_info);
+
     private:
         SOCKET sock;
         string ip_addr;
         uint16_t port;
 };
+
+#endif

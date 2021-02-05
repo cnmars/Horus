@@ -7,6 +7,9 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
+#ifndef MQTT_CLIENT_HPP
+#define MQTT_CLIENT_HPP
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -161,4 +164,4 @@ private:
 	string recv_topic;
 };
 
-
+#endif

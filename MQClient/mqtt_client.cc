@@ -34,55 +34,86 @@ MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
 }
 
 bool MqttClient::Setup() {
+	string client_id = Utils::GenerateID().c_str();
+
+	Log::LogInfo("Setting up client to connect with: " + this->broker_host);
+	Log::LogInfo("Client id: " + client_id);
 
     // Create MQTT client
-    int status = MQTTClient_create(&client, this->broker_host.c_str(), Utils::GenerateID().c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    int status = MQTTClient_create(&client, this->broker_host.c_str(), client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
     if(status != MQTTCLIENT_SUCCESS) {
-        return false;
+        Log::LogPanic("Failed to create MQTT client: " + to_string(status));
     }
 
     // Configure callbacks
-    MQTTClient_setCallbacks(client, this, Wrappers::onLost, Wrappers::onMsgReceived, Wrappers::onDelivered);
+    auto c = MQTTClient_setCallbacks(client, this, Wrappers::onLost, Wrappers::onMsgReceived, Wrappers::onDelivered);
+    if(c != MQTTCLIENT_SUCCESS) {
+        Log::LogPanic("Failed to setup callbacks: " + to_string(c));
+    }
+
+    return true;
 }
 
 
 void MqttClient::Subscribe(string topic) {
-	MQTTClient_subscribe(client, topic.c_str(), this->qos);
+	int status;
+	
+	Log::LogInfo("Subscribing to topic: " + topic);
+	if((status = MQTTClient_subscribe(client, topic.c_str(), this->qos)) != MQTTCLIENT_SUCCESS) {
+		Log::LogPanic("Failed to subscribe: " + to_string(status));
+	}
 }
 
 void MqttClient::ConfigureOptions(MQTTClient_connectOptions *options) {
-        options->connectTimeout = 10;
-        options->MQTTVersion = MQTTVERSION_5;
-        options->cleansession = 0;
-        options->will = NULL;
+        options->MQTTVersion = MQTTVERSION_3_1_1;
+		options->connectTimeout = 10;
+		options->cleansession = 1;
+		options->keepAliveInterval = 10;
 }
 
 void MqttClient::Connect() {
-    MQTTClient_connectOptions options;
+    MQTTClient_connectOptions options = MQTTClient_connectOptions_initializer;
 
     // Try connect with broker
     if(client != NULL) {
         this->ConfigureOptions(&options);
-        if(MQTTClient_connect(client, &options) != MQTTCLIENT_SUCCESS) {
-            Log::LogPanic("Failed to connect with broker");
+		auto connect_status = MQTTClient_connect(client, &options);
+        if(connect_status != MQTTCLIENT_SUCCESS) {
+            Log::LogPanic("Failed to connect with broker: " + to_string(connect_status));
         }
 
         // Sends the heartbeat
         SendHeartbeat();
+		
+		Log::LogInfo("Connected with " + broker_host);
     }
 }
 
 void MqttClient::Publish(string data, string topic) {
-    auto status = MQTTClient_publish(client, topic.c_str(), data.length(), 
-                    reinterpret_cast<const void*>(data.c_str()), 0, 0, nullptr);
+	MQTTClient_deliveryToken token;
+	auto delivery_timeout = 5000UL;
+	
+	if(topic.empty()) {
+		Log::LogError("Empty topic name passed to publish function");
+		return;
+	}
+	
+	// Publishes the message
+	MQTTClient_publish(client, topic.c_str(), data.length(), 
+                    reinterpret_cast<const void*>(data.c_str()), 0, 0, &token);
     
+	// Wait for message delivery
+	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
     if(status != MQTTCLIENT_SUCCESS) {
         Log::LogError("Failed to publish data: " + status);
     }
+
+	Log::LogInfo("Message published to topic " + topic);
 }
 
 void MqttClient::Loop() {
     while(true) {
+		MQTTClient_yield();
         Sleep(this->reconnect_timeout);
     }
 }
@@ -113,6 +144,8 @@ int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQT
     // Dispatch received command
     dispatcher->setMessage(message);
     dispatcher->Dispatch();
+	
+	return 0;
 }
 
 void MqttClient::OnDelivered(void* context, MQTTClient_deliveryToken dt) {

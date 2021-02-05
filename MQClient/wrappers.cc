@@ -14,7 +14,7 @@ void Wrappers::onLost(void *ctx, char *c) {
 }
 
 int Wrappers::onMsgReceived(void* context, char* topicName, int topicLen, MQTTClient_message* message) {
-    static_cast<MqttClient*>(context)->OnMessageReceived(context, topicName, topicLen, message);
+    return static_cast<MqttClient*>(context)->OnMessageReceived(context, topicName, topicLen, message);
 }
 
 void Wrappers::onDelivered(void* ctx, MQTTClient_deliveryToken dt) {

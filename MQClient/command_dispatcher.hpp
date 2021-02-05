@@ -7,10 +7,8 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#ifndef MQRAT_CMD_DISPATCHER_H
-#define MQRAT_CMD_DISPATCHER_H
-
-#include "mqtt_client.hpp"
+#ifndef COMMAND_DISPATCHER_HPP
+#define COMMAND_DISPATCHER_HPP
 
 #define MAX_CMD_SIZE    16
 
@@ -20,13 +18,13 @@
  */
 class CommandDispatcher {
     public:
-        explicit CommandDispatcher(MQTTClient_message *msg, MqttClient *client);
+        CommandDispatcher();
+        explicit CommandDispatcher(void *msg, void *client);
         void Dispatch();
-        void setMessage(MQTTClient_message *new_msg);
+        void setMessage(void *new_msg);
     private:
-        MQTTClient_message *message;
-        MqttClient *client;
+        void *message;
+        void *client;
 };
-
 
 #endif

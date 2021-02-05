@@ -7,8 +7,8 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#ifndef COMMAND_PROCESSOR_H
-#define COMMAND_PROCESSOR_H
+#ifndef COMMAND_PROCESSOR_HPP
+#define COMMAND_PROCESSOR_HPP
 
 #include <string>
 #include "mqtt_client.hpp"

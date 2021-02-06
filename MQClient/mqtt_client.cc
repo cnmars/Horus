@@ -67,8 +67,8 @@ void MqttClient::Subscribe(string topic) {
 void MqttClient::ConfigureOptions(MQTTClient_connectOptions *options) {
         options->MQTTVersion = MQTTVERSION_3_1_1;
 		options->connectTimeout = 10;
-		options->cleansession = 1;
-		options->keepAliveInterval = 10;
+		options->cleansession = 0;
+		//options->keepAliveInterval = 10;
 }
 
 void MqttClient::Connect() {
@@ -100,7 +100,7 @@ void MqttClient::Publish(string data, string topic) {
 	
 	// Publishes the message
 	MQTTClient_publish(client, topic.c_str(), data.length(), 
-                    reinterpret_cast<const void*>(data.c_str()), 0, 0, &token);
+                    reinterpret_cast<const void*>(data.c_str()), this->qos, 0, &token);
     
 	// Wait for message delivery
 	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
@@ -140,6 +140,8 @@ void MqttClient::OnConnectionLost(void *context, char *cause) {
 }
 
 int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQTTClient_message *message) {
+	
+	Log::LogInfo("Message received on topic " + string(topic));
 
     // Dispatch received command
     dispatcher->setMessage(message);

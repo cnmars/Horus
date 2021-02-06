@@ -21,10 +21,10 @@ void CommandProcessor::Process()
 {
     string output = "";
 
-    Log::LogInfo("Command received: " + command);
-
-    if(command == "/list-files") {
+    if(command != "list-files") {
         auto files = API::FileSystem::ListFiles();
         client->Publish(files, client->getSendTopic());
-    }
+    } else {
+		Log::LogInfo("Unknown command received: " + command);
+	}
 }

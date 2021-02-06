@@ -1,8 +1,11 @@
 package network
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 )
 
 func Loop() {
@@ -17,19 +20,25 @@ func Loop() {
 		}
 	}
 
-	// Read command
+	reader := bufio.NewReader(os.Stdin)
+
 	for {
 		fmt.Print("cmd> ")
-		_, err := fmt.Scanln(&command)
-		if err != nil {
-			log.Printf("[INFO] Failed to read line: %v", err)
-		} else {
-			// Send command to client
-			if client.IsConnected() {
-				for _, cl := range Clients {
-					waitForToken(client.Publish(cl, 1, false, command))
-				}
+
+		// Read command
+		command, _ = reader.ReadString('\n')
+
+		// Send command to client
+		if len(command) > 0 && client.IsConnected() {
+			for _, cl := range Clients {
+				client.Subscribe(fmt.Sprintf("%s/%s/output", baseTopic, cl))
+				responseTopic := fmt.Sprintf("%s/%s", baseTopic, cl)
+				fmt.Printf("[INFO] Sending command to %v\n", responseTopic)
+				waitForToken(client.Publish(responseTopic, qosLevel, true,
+					strings.ReplaceAll(command, "\n", "")))
 			}
+		} else {
+			log.Printf("[ERROR] Either: client is not connected or command is wrong")
 		}
 	}
 }

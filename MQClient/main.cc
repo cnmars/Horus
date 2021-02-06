@@ -23,7 +23,7 @@ using namespace std;
 
 int main() {
 	string topic_name = "/mqrat/cmd/";
-	unsigned QoS = 1;
+	unsigned QoS = 0;
 
 	MqttClient *client = new MqttClient(QoS, "tcp://broker.hivemq.com:1883");
 

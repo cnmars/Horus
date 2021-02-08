@@ -10,8 +10,10 @@
 #include "command_processor.hpp"
 #include "api.hpp"
 #include "log.hpp"
+#include "mqtt_client.hpp"
+#include "utils.hpp"
 
-CommandProcessor::CommandProcessor(string cmd, MqttClient *client)
+CommandProcessor::CommandProcessor(string cmd, void *client)
 {
     this->command = cmd;
     this->client = client;
@@ -20,11 +22,14 @@ CommandProcessor::CommandProcessor(string cmd, MqttClient *client)
 void CommandProcessor::Process()
 {
     string output = "";
+    auto client = static_cast<MqttClient*>(this->client);
+    auto send_topic = client->getSendTopic();
 
-    if(command != "list-files") {
+    if(command == "list-files") {
         auto files = API::FileSystem::ListFiles();
-        client->Publish(files, client->getSendTopic());
+        client->Publish(files, send_topic);
     } else {
+        client->Publish("/error", send_topic);
 		Log::LogInfo("Unknown command received: " + command);
 	}
 }

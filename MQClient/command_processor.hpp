@@ -11,19 +11,41 @@
 #define COMMAND_PROCESSOR_HPP
 
 #include <string>
-#include "mqtt_client.hpp"
 
 using namespace std;
 
+/**
+ * @brief Interface to command processor
+ * 
+ */
 class CommandProcessor {
 	public:
-		explicit CommandProcessor(string cmd, MqttClient *client);
+		/**
+		 * @brief Construct a new Command Processor object
+		 * 
+		 * @param cmd Command
+		 * @param client Pointer to MQTTClient
+		 */
+		explicit CommandProcessor(string cmd, void *client);
 
+		/**
+		 * @brief Process the specified command
+		 * 
+		 */
 		void Process();
 		
 	private:
+		/**
+		 * @brief Command to be executed
+		 * 
+		 */
 		string command;
-		MqttClient *client;
+		
+		/**
+		 * @brief Pointer to MQTT client
+		 * 
+		 */
+		void *client;
 };
 
 #endif

@@ -13,6 +13,7 @@
 #include "command_processor.hpp"
 #include "mqtt_client.hpp"
 #include "log.hpp"
+#include "MQTTClient.h"
 
 using namespace std;
 
@@ -48,4 +49,7 @@ void CommandDispatcher::Dispatch()
 
     // Analyse command syntax
     cp.Process();
+
+    // Free used memory
+    MQTTClient_freeMessage(&msg);
 }

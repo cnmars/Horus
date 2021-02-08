@@ -11,13 +11,13 @@
 #error "We need a C++ compiler"
 #endif
 
-#include <thread>
-#include <string>
-#include <functional>
 #include "mqtt_client.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 #include "network.hpp"
+#include <thread>
+#include <string>
+#include <functional>
 
 using namespace std;
 
@@ -45,10 +45,10 @@ int main() {
 
 	// Internal loop
 	std::thread mqtt_thread(&MqttClient::Loop, client);
-	
+
 	Log::LogInfo("Started MQTT client thread");
 	if(mqtt_thread.joinable())
 		mqtt_thread.join();
-	
+
     return 0;
 }

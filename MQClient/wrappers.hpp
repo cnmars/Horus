@@ -10,12 +10,12 @@
 #ifndef WRAPPERS_HPP
 #define WRAPPERS_HPP
 
-#include "mqtt_client.hpp"
+#include "paho/include/MQTTClient.h"
 
 namespace Wrappers {
     void onLost(void *ctx, char *c);
-    int onMsgReceived(void* context, char* topicName, int topicLen, MQTTClient_message* message);
-    void onDelivered(void* ctx, MQTTClient_deliveryToken dt);
+    int onMsgReceived(void* context, char* topicName, int topicLen, MQTTClient_message *message);
+    void onDelivered(void* ctx, int delivery_token);
 }
 
 #endif

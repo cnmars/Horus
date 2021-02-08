@@ -7,9 +7,9 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
+#include <windows.h>
 #include "utils.hpp"
 #include "log.hpp"
-#include <cstdio>
 
 void Utils::GenerateRandomSeed() {
 #ifdef WIN32
@@ -39,7 +39,7 @@ std::string Utils::GenerateID() {
 	
     if(UuidCreate(&uuid) == RPC_S_OK) {
         UuidToStringA(&uuid, (RPC_CSTR*)&uuid_str);
-		auto size = strlen(uuid_str);
+		auto size = std::string(uuid_str).length();
 		if(size != 36) {
 			Log::LogPanic("Invalid UUID generated: " + std::to_string(size));
 		}
@@ -51,4 +51,13 @@ std::string Utils::GenerateID() {
 #else
     throw "Not supported";
 #endif
+}
+
+std::string Utils::ToLower(std::string& s)
+{
+    for(auto& ch : s) {
+        ch = std::tolower(ch);
+    }
+
+    return s;
 }

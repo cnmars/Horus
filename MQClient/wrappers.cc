@@ -8,15 +8,17 @@
 */
 
 #include "wrappers.hpp"
+#include "mqtt_client.hpp"
+#include "paho/include/MQTTClient.h"
 
 void Wrappers::onLost(void *ctx, char *c) {
     static_cast<MqttClient*>(ctx)->OnConnectionLost(ctx, c);
 }
 
-int Wrappers::onMsgReceived(void* context, char* topicName, int topicLen, MQTTClient_message* message) {
+int Wrappers::onMsgReceived(void* context, char* topicName, int topicLen, MQTTClient_message *message) {
     return static_cast<MqttClient*>(context)->OnMessageReceived(context, topicName, topicLen, message);
 }
 
-void Wrappers::onDelivered(void* ctx, MQTTClient_deliveryToken dt) {
-    static_cast<MqttClient*>(ctx)->OnDelivered(ctx, dt);
+void Wrappers::onDelivered(void* ctx, int delivery_token) {
+    static_cast<MqttClient*>(ctx)->OnDelivered(ctx, delivery_token);
 }

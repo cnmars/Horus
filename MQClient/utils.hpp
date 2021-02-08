@@ -10,7 +10,6 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include <windows.h>
 #include <string>
 
 /**
@@ -38,6 +37,14 @@ public:
 	 * @return std::string an string containing a ID
 	 */
 	static std::string GenerateID();
+	
+	/**
+	 * @brief Transforms a string to lowercase
+	 * 
+	 * @param s String
+	 * @return std::string Lowercase string 
+	 */
+	static std::string ToLower(std::string& s);
 };
 
 #endif

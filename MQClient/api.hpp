@@ -13,12 +13,12 @@
 #include <vector>
 #include <string>
 
-using namespace std;
-
 namespace API {
     class FileSystem {
         public:
-            static vector<string> ListFiles();
+            static std::vector<std::string> ListFiles();
+
+            static std::string GetWindowsVersion();
     };
 }
 

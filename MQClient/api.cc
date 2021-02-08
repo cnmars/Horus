@@ -7,27 +7,33 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#include <windows.h>
+#include <iostream>
+#include <filesystem>
 #include "api.hpp"
 #include "fs.hpp"
 
+using namespace std;
+
 vector<string> API::FileSystem::ListFiles()
 {
-    WIN32_FIND_DATA fdata;
     vector<string> file_list;
+    string path = ".";
 
-    HANDLE handle = FindFirstFileA("*.*", &fdata);
-    if(!handle) {
-        return file_list;
+    for(auto entry : filesystem::directory_iterator(path)) {
+        auto filename = entry.path().filename().generic_string();
+        file_list.push_back(filename);
     }
 
-    do {
-        if(!IS_NODE_DIR(fdata.cFileName)) {
-            file_list.push_back(fdata.cFileName);
-        }
-    } while(FindNextFileA(handle, &fdata));
-
-    FindClose(handle);
-
     return file_list;
+}
+
+std::string API::FileSystem::GetWindowsVersion()
+{
+    OSVERSIONINFOA version;
+
+    if(GetVersionExA(&version)) {
+        return string(version.szCSDVersion);
+    }
+
+    return "";
 }

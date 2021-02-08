@@ -14,9 +14,6 @@
 #include <windows.h>
 #include <string>
 #include <memory>
-#include "network.hpp"
-
-using namespace std;
 
 /**
  * @brief Handle to TCP client
@@ -36,7 +33,7 @@ class TcpClient {
          * @param ip_address 
          * @param port 
          */
-        explicit TcpClient(string ip_address, uint16_t port);
+        explicit TcpClient(std::string ip_address, uint16_t port);
 
         /**
          * @brief Destroy the Tcp Client object
@@ -104,7 +101,7 @@ private:
 
     private:
         SOCKET sock;
-        string ip_addr;
+        std::string ip_addr;
         uint16_t port;
 };
 

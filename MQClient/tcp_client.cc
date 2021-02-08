@@ -9,6 +9,7 @@
 
 #include "tcp_client.hpp"
 #include "log.hpp"
+#include "network.hpp"
 
 TcpClient::TcpClient()
 {
@@ -74,7 +75,8 @@ bool TcpClient::Connect(void *addr_info)
         this->Initialize(addr_info);
     
         // Tries to connect to the server
-        auto status = connect(this->sock, info->sock_addr, info->sock_addr_len);
+        auto sock_addr = reinterpret_cast<sockaddr*>(info->sock_addr);
+        auto status = connect(this->sock, sock_addr, info->sock_addr_len);
         if(status != SOCKET_ERROR)
             return true;
     }

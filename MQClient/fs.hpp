@@ -12,8 +12,7 @@
 
 #include <windows.h>
 #include <string>
-
-using namespace std;
+#include <filesystem>
 
 #define FS_BUFLEN	256
 
@@ -60,7 +59,7 @@ public:
 	 * @param path 
 	 * @return string 
 	 */
-	static string GetFilename(string path);
+	static std::string GetFilename(std::string path);
 
 	/**
 	 * @brief Encode a file using the internal encoding algorithm
@@ -70,7 +69,7 @@ public:
 	 * @return true On success
 	 * @return false On error
 	 */
-	static bool EncodeFile(const char *from, const char *to);
+	static bool EncodeFile(std::string from, std::string to);
 
 	/**
 	 * @brief Dncode a file that has been previously encoded with internal encoding algorithm
@@ -80,7 +79,7 @@ public:
 	 * @return true On success
 	 * @return false On error
 	 */
-	static bool DecodeFile(const char *from, const char *to);
+	static bool DecodeFile(std::string from, std::string to);
 };
 
 #endif

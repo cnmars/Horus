@@ -7,9 +7,11 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-#include <windows.h>
 #include <fstream>
 #include "fs.hpp"
+
+using namespace std;
+namespace fs = filesystem;
 
 DWORD FS::GetModuleFilename(HMODULE hmodule, LPTSTR path, DWORD len)
 {
@@ -30,91 +32,55 @@ DWORD FS::GetModuleFilename(HMODULE hmodule, LPTSTR path, DWORD len)
 	return dwGet;
 }
 
-string FS::GetFilename(string path)
+string FS::GetFilename(string full_path)
 {
-	char delim = '\\';
-	char slash = '/';
-	string exeName = "";
-	int i = 0;
-	int last_index_of = 1;
-	char *thisExePath = NULL;
+	fs::path path(full_path);
 
-	if(!(path.size()  > 0))
-	{
-		thisExePath = new char[FS_BUFLEN];
-		if(thisExePath == NULL)
-			return NULL;
-		
-		if(FS::GetModuleFilename(0, thisExePath, sizeof(char) * FS_BUFLEN) == 0)
-		{
-			delete[] thisExePath;
-			
-			return NULL;
-		}
-		
-		exeName = thisExePath;
-	}
-	else {
-		exeName = path;
-	}
-	
-	// Procura pela posição do último delimitador
-	if(path.find(slash) != string::npos) {
-		// Caminho do tipo linux
-		last_index_of = exeName.find_last_of(delim);
-	} else {
-		// Caminho do tipo windows
-		last_index_of = exeName.find_last_of(slash);
-	}
-
-	if(last_index_of == -1) {
-		return path;
-	}
-	
-	return exeName.substr(last_index_of + 1);
+	return path.filename().generic_string();
 }
 
-bool FS::EncodeFile(const char *from, const char *to)
+bool FS::EncodeFile(std::string from, std::string to)
 {
 	ifstream input(from, ios_base::in);
 	ofstream output(to, ios_base::out);
 	unsigned int ch;
 
-	// Realiza o processo de leitura até que o fim seja encontrado ou um erro ocorra	
-	for(;;)
+	// Read file	
+	while(!input.eof())
 	{
 		input >> ch;
 		ch = input.get();
 		
-		// Realiza a codificação
+		// Encode character
 		output << (~(ch)) + 0x56;
 	}
 	
+	// Close files
 	input.close();
 	output.close();
 	
 	// Delete input file
-	DeleteFileA(from);
+	DeleteFileA(from.c_str());
 
 	return true;
 }
 
-bool FS::DecodeFile(const char *from, const char *to)
+bool FS::DecodeFile(std::string from, std::string to)
 {
-	ifstream input(from);
-	ofstream output(to);
+	ifstream input(from, ios_base::in);
+	ofstream output(to, ios_base::out);
 	unsigned int ch;
 
-	// Realiza o processo de leitura até que o fim seja encontrado ou um erro ocorra
-	for(;;)
+	// Read file until end
+	while(!input.eof())
 	{
 		input >> ch;
-		
-		// Realiza a decodificação
+
+		// Decode character
 		output << ~(ch - 0x56);
 	}
-	
-	// Fecha ambos os arquivos
+
+	// Closes both files
 	input.close();
 	output.close();
 	

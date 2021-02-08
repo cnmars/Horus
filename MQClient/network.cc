@@ -7,8 +7,6 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
-
-#include <winsock.h>
 #include <windows.h>
 #include <wininet.h>
 #include <ws2tcpip.h>
@@ -18,8 +16,6 @@
 #include "network.hpp"
 #include "tcp_client.hpp"
 #include "log.hpp"
-
-using namespace std;
 
 // Inicializa a winsock library
 bool Network::Utils::LoadWinsock()
@@ -116,7 +112,7 @@ struct ipv4_addr_info *Network::Utils::SolveIPAddress(string hostname)
 	for(p = result; p != NULL; p = p->ai_next) {
 		if(p->ai_family == AF_INET) {
 			addr->ip = string(inet_ntoa(((struct sockaddr_in*)p->ai_addr)->sin_addr));
-			addr->sock_addr = p->ai_addr;
+			addr->sock_addr = reinterpret_cast<void*>(p->ai_addr);
 			addr->sock_addr_len = p->ai_addrlen;
 			addr->ai_family = p->ai_family;
 			addr->ai_protocol = p->ai_protocol;

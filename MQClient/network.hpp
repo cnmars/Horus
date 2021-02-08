@@ -10,7 +10,6 @@
 #ifndef NETWORK_HPP
 #define NETWORK_HPP
 
-#include <ws2tcpip.h>
 #include <string>
 #include <memory>
 
@@ -39,7 +38,7 @@ using namespace std;
 #endif
 
 struct ipv4_addr_info {
-	sockaddr *sock_addr;
+	void *sock_addr;
 	string ip;
 	size_t sock_addr_len;
 	int ai_family;

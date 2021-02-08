@@ -12,6 +12,8 @@
 
 #include <string>
 
+using namespace std;
+
 class Log {
     public:
         /**
@@ -19,21 +21,21 @@ class Log {
          * 
          * @param message Message to be printed
          */
-        static void LogPanic(std::string message);
+        static void LogPanic(string message);
 
         /**
          * @brief Print a message to console preceeded by a error string
          * 
          * @param message Message to be printed
          */
-        static void LogError(std::string message);
+        static void LogError(string message);
 
         /**
          * @brief Print a message to console
          * 
          * @param message Message to be printed
          */
-        static void LogInfo(std::string message);
+        static void LogInfo(string message);
 };
 
 #endif

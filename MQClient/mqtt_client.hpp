@@ -13,9 +13,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "paho/include/MQTTClient.h"
-#include "paho/include/MQTTClientPersistence.h"
-#include "command_dispatcher.hpp"
 
 #define CLIENT_ID_LENGTH    32
 
@@ -28,6 +25,7 @@ class MqttClient {
 
 public:
 	MqttClient();
+	~MqttClient();
 	explicit MqttClient(unsigned qos_level, string broker_hostname);
 	
 	/**
@@ -72,7 +70,7 @@ public:
 	 * 
 	 * @return MQTTClient a handle to MQTT client
 	 */
-	MQTTClient GetClient();
+	void *GetClient();
 
 	/**
 	 * @brief Called when mqtt client losts the connection
@@ -91,7 +89,7 @@ public:
 	 * @param message 
 	 * @return int 
 	 */
-	int OnMessageReceived(void *context, char *topic, int topic_len, MQTTClient_message *message);
+	int OnMessageReceived(void *context, char *topic, int topic_len, void *message);
 
 	/**
 	 * @brief Called when the message is delivered to broker
@@ -99,7 +97,7 @@ public:
 	 * @param context 
 	 * @param token 
 	 */
-	void OnDelivered(void* context, MQTTClient_deliveryToken dt);
+	void OnDelivered(void* context, int delivery_token);
 
 	/**
 	 * @brief connects to MQTT broker
@@ -146,7 +144,7 @@ private:
 	 * 
 	 * @param options client options
 	 */
-	void ConfigureOptions(MQTTClient_connectOptions *options);
+	void ConfigureOptions(void *options);
 	
 	/**
 	 * @brief Internal method to let server know that's a new client ready
@@ -156,10 +154,11 @@ private:
 
 private:
 	unsigned qos;
-	MQTTClient client;
+	void *client;
 	string broker_host;
 	unsigned reconnect_timeout;
-	CommandDispatcher *dispatcher;
+	const unsigned yield_delay_ms = 5000U;
+	void *dispatcher;
 	string send_topic;
 	string recv_topic;
 };

@@ -10,6 +10,10 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <windows.h>
+#include "paho/include/MQTTClient.h"
+#include "paho/include/MQTTClientPersistence.h"
+#include "command_dispatcher.hpp"
 #include "mqtt_client.hpp"
 #include "utils.hpp"
 #include "log.hpp"
@@ -23,6 +27,7 @@ MqttClient::MqttClient() {
     this->client = nullptr;
     this->broker_host = "127.0.0.1";
     this->reconnect_timeout = 5000;
+    dispatcher = new CommandDispatcher(nullptr, this);
 }
 
 MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
@@ -33,6 +38,11 @@ MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
     dispatcher = new CommandDispatcher(nullptr, this);
 }
 
+MqttClient::~MqttClient() {
+    Log::LogInfo("MQTT client finished");
+    MQTTClient_free(this->client);
+}
+
 bool MqttClient::Setup() {
 	string client_id = Utils::GenerateID().c_str();
 
@@ -40,7 +50,7 @@ bool MqttClient::Setup() {
 	Log::LogInfo("Client id: " + client_id);
 
     // Create MQTT client
-    int status = MQTTClient_create(&client, this->broker_host.c_str(), client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    auto status = MQTTClient_create(&client, this->broker_host.c_str(), client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
     if(status != MQTTCLIENT_SUCCESS) {
         Log::LogPanic("Failed to create MQTT client: " + to_string(status));
     }
@@ -64,11 +74,11 @@ void MqttClient::Subscribe(string topic) {
 	}
 }
 
-void MqttClient::ConfigureOptions(MQTTClient_connectOptions *options) {
-        options->MQTTVersion = MQTTVERSION_3_1_1;
-		options->connectTimeout = 10;
-		options->cleansession = 0;
-		//options->keepAliveInterval = 10;
+void MqttClient::ConfigureOptions(void *m_options) {
+    auto options = static_cast<MQTTClient_connectOptions*>(m_options);
+    options->MQTTVersion = MQTTVERSION_3_1_1;
+    options->connectTimeout = 10;
+    options->cleansession = 0;
 }
 
 void MqttClient::Connect() {
@@ -106,6 +116,7 @@ void MqttClient::Publish(string data, string topic) {
 	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
     if(status != MQTTCLIENT_SUCCESS) {
         Log::LogError("Failed to publish data: " + status);
+        return;
     }
 
 	Log::LogInfo("Message published to topic " + topic);
@@ -114,7 +125,7 @@ void MqttClient::Publish(string data, string topic) {
 void MqttClient::Loop() {
     while(true) {
 		MQTTClient_yield();
-        Sleep(this->reconnect_timeout);
+        Sleep(this->yield_delay_ms);
     }
 }
 
@@ -139,13 +150,14 @@ void MqttClient::OnConnectionLost(void *context, char *cause) {
     this->Connect();
 }
 
-int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQTTClient_message *message) {
+int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, void *message) {
 	
 	Log::LogInfo("Message received on topic " + string(topic));
 
     // Dispatch received command
-    dispatcher->setMessage(message);
-    dispatcher->Dispatch();
+    auto msg = static_cast<MQTTClient_message*>(message);
+    static_cast<CommandDispatcher*>(dispatcher)->setMessage(msg);
+    static_cast<CommandDispatcher*>(dispatcher)->Dispatch();
 	
 	return 0;
 }

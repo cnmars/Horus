@@ -138,6 +138,20 @@ public:
 	 * @param new_topic Topic name
 	 */
 	void setRecvTopic(string new_topic);
+
+	/**
+	 * @brief Set the Heartbeat Topic object
+	 * 
+	 * @param new_topic 
+	 */
+	void setHeartbeatTopic(string new_topic);
+
+	/**
+	 * @brief Get the Heartbeat Topic object
+	 * 
+	 * @return string 
+	 */
+	string getHeartbeatTopic();
 private:
 	/**
 	 * @brief Configure MQTT client options
@@ -161,6 +175,9 @@ private:
 	void *dispatcher;
 	string send_topic;
 	string recv_topic;
+	string heartbeat_topic;
+
+	const string heartbeat_payload = "/hb";
 };
 
 #endif

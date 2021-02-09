@@ -31,11 +31,13 @@ int main() {
     client->Setup();
 
 	// Generate send and receive topic
-	auto recv_topic = topic_name + Utils::GenerateID();
-	auto send_topic = recv_topic + "/output";
+	auto heartbeat_topic = topic_name + Utils::GenerateID();
+	auto recv_topic = heartbeat_topic + "/command";
+	auto send_topic = heartbeat_topic + "/output";
 
 	client->setRecvTopic(recv_topic);
 	client->setSendTopic(send_topic);
+	client->setHeartbeatTopic(heartbeat_topic);
 
 	// Connect to broker
 	client->Connect();

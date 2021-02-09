@@ -12,6 +12,7 @@
 #include "log.hpp"
 #include "mqtt_client.hpp"
 #include "utils.hpp"
+#include <exception>
 
 CommandProcessor::CommandProcessor(string cmd, void *client)
 {
@@ -30,6 +31,6 @@ void CommandProcessor::Process()
         client->Publish(files, send_topic);
     } else {
         client->Publish("/error", send_topic);
-		Log::LogInfo("Unknown command received: " + command);
+		Log::LogInfo("Unknown command received");
 	}
 }

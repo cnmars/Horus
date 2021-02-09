@@ -178,7 +178,7 @@ string MqttClient::getSendTopic()
 
 void MqttClient::SendHeartbeat()
 {
-    this->Publish("/hb", getRecvTopic());
+    Publish(this->heartbeat_payload, getHeartbeatTopic());
 }
 
 string MqttClient::getRecvTopic()
@@ -189,4 +189,14 @@ string MqttClient::getRecvTopic()
 void MqttClient::setRecvTopic(string new_topic)
 {
     this->recv_topic = new_topic;
+}
+
+void MqttClient::setHeartbeatTopic(string new_topic)
+{
+    this->heartbeat_topic = new_topic;
+}
+
+string MqttClient::getHeartbeatTopic()
+{
+    return this->heartbeat_topic;
 }

@@ -1,16 +1,17 @@
 package network
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 )
 
 // Clients contains the ID's of connected clients
-var Clients []string
+var Clients = make(map[string]string)
 
+// translateMessage function checks if message is a command sent or a command output
 func translateMessage(client MQTT.Client, message MQTT.Message) {
 	var remoteClientID string
 
@@ -19,21 +20,51 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 	payload := string(message.Payload())
 	levels := strings.Split(topic, "/")
 
-	if len(levels) == 4 {
+	levelCount := len(levels)
+	if levelCount < 4 || levelCount > 5 {
+		return
+	}
+
+	// Extract client ID
+	remoteClientID = levels[3]
+
+	// Validate client ID
+	_, err := uuid.Parse(remoteClientID)
+	if err != nil {
+		log.Printf("[ERROR] Invalid client ID detected")
+		return
+	}
+
+	if levelCount == 4 {
 		// Check if is heartbeat payload
 		if len(payload) == 3 && payload == "/hb" {
-			// Extract client id
-			remoteClientID = levels[3]
 			log.Printf("[INFO] Client connected: " + remoteClientID)
 
 			// Save client ID on memory
-			Clients = append(Clients, remoteClientID)
+			Clients[remoteClientID] = topic
+		} else {
+			log.Printf("[ERROR] Payload not recognized: %v", payload)
 		}
-	} else if len(levels) == 5 {
+	} else if levelCount == 5 {
 
-		// Process command response
-		fmt.Printf(payload)
+		// Extract subtopic
+		subTopic := levels[4]
+
+		if subTopic == outputTopic {
+			// Process command response
+			log.Printf("[RESPONSE] " + payload)
+		}
 	} else {
-		log.Printf("[WARN] Topic name too big: %v", topic)
+		log.Printf("[WARN] Topic name too big: %s", topic)
 	}
+}
+
+// getTopicNameByClientID returns the topic name used to communicate with specified client
+func getTopicNameByClientID(clientID string) string {
+	topic, found := Clients[clientID]
+	if found {
+		return topic
+	}
+
+	return ""
 }

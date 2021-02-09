@@ -6,7 +6,10 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
+
+var subscribedTopics = make(map[string]string)
 
 func Loop() {
 
@@ -18,6 +21,9 @@ func Loop() {
 		if len(Clients) > 0 {
 			break
 		}
+
+		// Wait some time
+		time.Sleep(time.Millisecond * 500)
 	}
 
 	reader := bufio.NewReader(os.Stdin)
@@ -30,15 +36,41 @@ func Loop() {
 
 		// Send command to client
 		if len(command) > 0 && client.IsConnected() {
-			for _, cl := range Clients {
-				client.Subscribe(fmt.Sprintf("%s/%s/output", baseTopic, cl))
-				responseTopic := fmt.Sprintf("%s/%s", baseTopic, cl)
-				fmt.Printf("[INFO] Sending command to %v\n", responseTopic)
-				waitForToken(client.Publish(responseTopic, qosLevel, true,
-					strings.ReplaceAll(command, "\n", "")))
+			for _, clientTopic := range Clients {
+
+				// Topic used to receive command responses
+				responseTopic := fmt.Sprintf("%s/%s", clientTopic, outputTopic)
+
+				// Topic used to send commands
+				requestTopic := fmt.Sprintf("%s/%s", clientTopic, cmdTopic)
+
+				// Check this server has been subscribed to output topic
+				if updateSubscribedTopics(requestTopic, responseTopic) {
+					client.Subscribe(responseTopic, qosLevel, onMessageReceived)
+				}
+
+				fmt.Printf("[INFO] Sending command to %v\n", requestTopic)
+
+				// Send command to the specified client
+				token := client.Publish(requestTopic, qosLevel, true,
+					strings.ReplaceAll(command, "\n", ""))
+
+				// Wait message to be published
+				waitForToken(token)
 			}
 		} else {
 			log.Printf("[ERROR] Either: client is not connected or command is wrong")
 		}
 	}
+}
+
+func updateSubscribedTopics(requestTopic, responseTopic string) bool {
+	// Checks if topic already exists
+	_, found := subscribedTopics[responseTopic]
+	if !found {
+		subscribedTopics[responseTopic] = requestTopic
+		return true
+	}
+
+	return false
 }

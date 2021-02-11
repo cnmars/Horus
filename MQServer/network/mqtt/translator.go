@@ -11,6 +11,8 @@ import (
 // Clients contains the ID's of connected clients
 var Clients = make(map[string]string)
 
+var commandProcessed = make(chan bool)
+
 // translateMessage function checks if message is a command sent or a command output
 func translateMessage(client MQTT.Client, message MQTT.Message) {
 	var remoteClientID string
@@ -53,6 +55,7 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 		if subTopic == outputTopic {
 			// Process command response
 			log.Printf("[RESPONSE] " + payload)
+			commandProcessed <- true
 		}
 	} else {
 		log.Printf("[WARN] Topic name too big: %s", topic)

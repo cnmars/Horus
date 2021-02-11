@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -46,21 +45,33 @@ func Loop() {
 
 				// Check this server has been subscribed to output topic
 				if updateSubscribedTopics(requestTopic, responseTopic) {
-					client.Subscribe(responseTopic, qosLevel, onMessageReceived)
+					//client.Subscribe(responseTopic, qosLevel, onMessageReceived)
 				}
 
 				fmt.Printf("[INFO] Sending command to %v\n", requestTopic)
 
+				// Remove leading whitespaces
+				command = command[:len(command)-2]
+
 				// Send command to the specified client
-				token := client.Publish(requestTopic, qosLevel, true,
-					strings.ReplaceAll(command, "\n", ""))
+				token := client.Publish(requestTopic, qosLevel, true, command)
 
 				// Wait message to be published
 				waitForToken(token)
 			}
 		} else {
 			log.Printf("[ERROR] Either: client is not connected or command is wrong")
+			log.Printf("[DEBUG] Command: %v", command)
 		}
+
+		fmt.Println("[INFO] Waiting for response ...")
+
+		select {
+		case <-commandProcessed:
+			break
+		}
+
+		fmt.Println("[INFO] Response received")
 	}
 }
 

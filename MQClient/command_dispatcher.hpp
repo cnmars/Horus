@@ -19,12 +19,14 @@
 class CommandDispatcher {
     public:
         CommandDispatcher();
-        explicit CommandDispatcher(void *msg, void *client);
+        explicit CommandDispatcher(void *msg, void *client, char *topic);
         void Dispatch();
         void setMessage(void *new_msg);
+        void setTopic(char *topic_name);
     private:
         void *message;
         void *client;
+        char *topic;
 };
 
 #endif

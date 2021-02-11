@@ -23,15 +23,21 @@ CommandDispatcher::CommandDispatcher()
     this->client = nullptr;
 }
 
-CommandDispatcher::CommandDispatcher(void *msg, void *client)
+CommandDispatcher::CommandDispatcher(void *msg, void *client, char *topic)
 {
     this->message = msg;
     this->client = client;
+    this->topic = topic;
 }
 
 void CommandDispatcher::setMessage(void *new_msg)
 {
     this->message = new_msg;
+}
+
+void CommandDispatcher::setTopic(char *topic_name)
+{
+    this->topic = topic_name;
 }
 
 void CommandDispatcher::Dispatch()
@@ -41,6 +47,8 @@ void CommandDispatcher::Dispatch()
     // Check command size
     if(msg->payloadlen > MAX_CMD_SIZE) {
         Log::LogError("Too big command size: " + to_string(msg->payloadlen));
+        auto c = static_cast<MqttClient*>(this->client);
+        c->Publish("/error", this->topic);
         return;
     }
 

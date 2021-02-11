@@ -53,6 +53,15 @@ public:
 	void Publish(vector<string> data, string topic);
 
 	/**
+	 * @brief 
+	 * 
+	 * @param data 
+	 * @param topic 
+	 * @param QoS 
+	 */
+	void Publish(string data, string topic, unsigned QoS, bool retained);
+
+	/**
 	 * @brief Subscribe to a specific topic
 	 * 
 	 * @param topic Topic name

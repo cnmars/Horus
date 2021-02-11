@@ -27,7 +27,7 @@ MqttClient::MqttClient() {
     this->client = nullptr;
     this->broker_host = "127.0.0.1";
     this->reconnect_timeout = 5000;
-    dispatcher = new CommandDispatcher(nullptr, this);
+    dispatcher = new CommandDispatcher(nullptr, this, nullptr);
 }
 
 MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
@@ -35,7 +35,7 @@ MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
     this->client = nullptr;
     this->broker_host = broker_hostname;
     this->reconnect_timeout = 5000;
-    dispatcher = new CommandDispatcher(nullptr, this);
+    dispatcher = new CommandDispatcher(nullptr, this, nullptr);
 }
 
 MqttClient::~MqttClient() {
@@ -99,7 +99,7 @@ void MqttClient::Connect() {
     }
 }
 
-void MqttClient::Publish(string data, string topic) {
+void MqttClient::Publish(string data, string topic, unsigned QoS, bool retained) {
 	MQTTClient_deliveryToken token;
 	auto delivery_timeout = 5000UL;
 	
@@ -110,7 +110,7 @@ void MqttClient::Publish(string data, string topic) {
 	
 	// Publishes the message
 	MQTTClient_publish(client, topic.c_str(), data.length(), 
-                    reinterpret_cast<const void*>(data.c_str()), this->qos, 0, &token);
+                    reinterpret_cast<const void*>(data.c_str()), QoS, retained, &token);
     
 	// Wait for message delivery
 	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
@@ -120,6 +120,10 @@ void MqttClient::Publish(string data, string topic) {
     }
 
 	Log::LogInfo("Message published to topic " + topic);
+}
+
+void MqttClient::Publish(string data, string topic) {
+    return Publish(data, topic, this->qos, false);
 }
 
 void MqttClient::Loop() {
@@ -156,8 +160,11 @@ int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, voi
 
     // Dispatch received command
     auto msg = static_cast<MQTTClient_message*>(message);
-    static_cast<CommandDispatcher*>(dispatcher)->setMessage(msg);
-    static_cast<CommandDispatcher*>(dispatcher)->Dispatch();
+    auto dp = static_cast<CommandDispatcher*>(dispatcher);
+    
+    dp->setMessage(msg);
+    dp->Dispatch();
+    dp->setTopic(const_cast<char*>(getSendTopic().c_str()));
 	
 	return 0;
 }
@@ -178,7 +185,9 @@ string MqttClient::getSendTopic()
 
 void MqttClient::SendHeartbeat()
 {
-    Publish(this->heartbeat_payload, getHeartbeatTopic());
+    const auto qualityOfService = 2;
+
+    Publish(this->heartbeat_payload, getHeartbeatTopic(), qualityOfService, true);
 }
 
 string MqttClient::getRecvTopic()

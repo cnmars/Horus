@@ -1,6 +1,7 @@
 package main
 
 import (
+	"MQServer/cipher"
 	MQTT "MQServer/network/mqtt"
 	"MQServer/utils"
 )
@@ -15,6 +16,12 @@ func main() {
 
 func start() {
 	var qosLevel byte = 0
+
+	// Generate encryption keys with a 2048 bit key
+	cipher.EncryptionKeys = cipher.GenerateKeys(2048)
+
+	// Precompute some values
+	cipher.EncryptionKeys.Private.Precompute()
 
 	// Start MQTT client
 	MQTT.Start(qosLevel)

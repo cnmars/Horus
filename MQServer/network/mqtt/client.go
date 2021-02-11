@@ -4,6 +4,7 @@ import (
 	"MQServer/utils"
 	"fmt"
 	"log"
+	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -52,6 +53,13 @@ func Start(QoS byte) {
 	waitForToken(token)
 }
 
+func Loop() {
+	for {
+		time.Sleep(time.Minute)
+	}
+}
+
+// Stop function stops the MQTT client
 func Stop() {
 	client.Disconnect(5000)
 }

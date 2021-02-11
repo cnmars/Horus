@@ -1,6 +1,7 @@
 package network
 
 import (
+	"MQServer/cipher"
 	"log"
 	"strings"
 
@@ -53,8 +54,12 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 		subTopic := levels[4]
 
 		if subTopic == outputTopic {
-			// Process command response
-			log.Printf("[RESPONSE] " + payload)
+			// Decrypt command response
+			decryptedPayload, decErr := cipher.Decrypt(payload)
+			if decErr == nil {
+				log.Printf("[RESPONSE] " + string(decryptedPayload))
+			}
+
 			commandProcessed <- true
 		}
 	} else {

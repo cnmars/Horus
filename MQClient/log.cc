@@ -8,11 +8,13 @@
 */
 
 #include <iostream>
+#include <atomic>
 #include "log.hpp"
 
 using namespace std;
 
 void Log::LogPanic(string msg) {
+	
     cout << "[FATAL] " << msg << endl;
     exit(1);
 }

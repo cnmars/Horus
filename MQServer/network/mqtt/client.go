@@ -4,7 +4,6 @@ import (
 	"MQServer/utils"
 	"fmt"
 	"log"
-	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -26,6 +25,7 @@ var client MQTT.Client
 // qosLevel contains the value used for QoS
 var qosLevel byte
 
+// Start function starts the MQTT client with the specified QoS level
 func Start(QoS byte) {
 	// Update QoS level
 	qosLevel = QoS
@@ -51,12 +51,6 @@ func Start(QoS byte) {
 
 	token = client.Subscribe(fmt.Sprintf("%v/+", baseTopic), QoS, onHeartbeatReceived)
 	waitForToken(token)
-}
-
-func Loop() {
-	for {
-		time.Sleep(time.Minute)
-	}
 }
 
 // Stop function stops the MQTT client

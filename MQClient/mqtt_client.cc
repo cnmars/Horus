@@ -163,8 +163,8 @@ int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, voi
     auto dp = static_cast<CommandDispatcher*>(dispatcher);
     
     dp->setMessage(msg);
-    dp->Dispatch();
     dp->setTopic(const_cast<char*>(getSendTopic().c_str()));
+    dp->Dispatch();
 	
 	return 0;
 }
@@ -187,7 +187,7 @@ void MqttClient::SendHeartbeat()
 {
     const auto qualityOfService = 2;
 
-    Publish(this->heartbeat_payload, getHeartbeatTopic(), qualityOfService, true);
+    Publish(this->heartbeat_payload, getHeartbeatTopic(), qualityOfService, false);
 }
 
 string MqttClient::getRecvTopic()

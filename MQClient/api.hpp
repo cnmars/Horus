@@ -16,8 +16,18 @@
 namespace API {
     class FileSystem {
         public:
+            /**
+             * @brief List all files in current directory
+             * 
+             * @return std::vector<std::string> 
+             */
             static std::vector<std::string> ListFiles();
 
+            /**
+             * @brief Get the Windows Version object
+             * 
+             * @return std::string 
+             */
             static std::string GetWindowsVersion();
     };
 }

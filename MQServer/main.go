@@ -17,8 +17,8 @@ func main() {
 func start() {
 	var qosLevel byte = 0
 
-	// Generate encryption keys with a 2048 bit key
-	cipher.EncryptionKeys = cipher.GenerateKeys(2048)
+	// Generate encryption keys with a 4096 bit key
+	cipher.EncryptionKeys = cipher.GenerateKeys(4096)
 
 	// Precompute some values
 	cipher.EncryptionKeys.Private.Precompute()

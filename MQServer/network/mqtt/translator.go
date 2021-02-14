@@ -24,12 +24,12 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 	levels := strings.Split(topic, "/")
 
 	levelCount := len(levels)
-	if levelCount < 4 || levelCount > 5 {
+	if levelCount < 3 || levelCount > 4 {
 		return
 	}
 
 	// Extract client ID
-	remoteClientID = levels[3]
+	remoteClientID = levels[2]
 
 	// Validate client ID
 	_, err := uuid.Parse(remoteClientID)
@@ -38,7 +38,7 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 		return
 	}
 
-	if levelCount == 4 {
+	if levelCount == 3 {
 		// Check if is heartbeat payload
 		if len(payload) == 3 && payload == "/hb" {
 			log.Printf("[INFO] Client connected: " + remoteClientID)
@@ -48,16 +48,18 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 		} else {
 			log.Printf("[ERROR] Payload not recognized: %v", payload)
 		}
-	} else if levelCount == 5 {
+	} else if levelCount == 4 {
 
 		// Extract subtopic
-		subTopic := levels[4]
+		subTopic := levels[levelCount-1]
 
 		if subTopic == outputTopic {
 			// Decrypt command response
 			decryptedPayload, decErr := cipher.Decrypt(payload)
 			if decErr == nil {
-				log.Printf("[RESPONSE] " + string(decryptedPayload))
+				log.Printf("Decrypted response from %v: %v", remoteClientID, string(decryptedPayload))
+			} else {
+				log.Printf("Response from %v: %v", remoteClientID, payload)
 			}
 
 			commandProcessed <- true

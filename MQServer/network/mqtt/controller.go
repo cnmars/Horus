@@ -16,7 +16,7 @@ func Loop() {
 
 	var command string
 
-	log.Printf("[INFO] Waiting for new clients")
+	fmt.Println("[INFO] Waiting for new clients")
 
 	for {
 		if len(Clients) > 0 {
@@ -57,10 +57,12 @@ func Loop() {
 				pk := cipher.EncryptionKeys.B64PubKey
 
 				// Append public key to command
-				command += fmt.Sprintf("%s%.2X", pk, len(pk))
+				command += fmt.Sprintf("%s%.3X", pk, len(pk))
+
+				fmt.Printf("pk size: %v (%.3X)\n", len(pk), len(pk))
 
 				// Send command to the specified client
-				token := client.Publish(requestTopic, qosLevel, true, command)
+				token := client.Publish(requestTopic, qosLevel, false, command)
 
 				// Wait message to be published
 				waitForToken(token)

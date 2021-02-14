@@ -30,6 +30,7 @@ func GenerateKeys(bits int) (keys *RSAKeys) {
 	// Fill struct with keys
 	keys.Private = privateKey
 	keys.Public = &privateKey.PublicKey
+
 	saveKeys(keys)
 
 	return

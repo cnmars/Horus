@@ -11,7 +11,7 @@ import (
 // brokerHostname constains DNS name of mqtt broker
 const brokerHostname string = "broker.hivemq.com:1883"
 
-const baseTopic string = "/mqrat/cmd"
+const baseTopic string = "mqrat/cmd"
 
 // outputTopic contains the name of subtopic used to receive command responses
 const outputTopic string = "output"

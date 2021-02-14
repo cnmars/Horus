@@ -11,20 +11,32 @@
 #error "We need a C++ compiler"
 #endif
 
+#include <thread>
+#include <string>
+#include <functional>
+#include <csignal>
 #include "mqtt_client.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 #include "network.hpp"
-#include <thread>
-#include <string>
-#include <functional>
 
 using namespace std;
 
+void sigsegv_handler(int s) {
+	Log::LogPanic("Segmentation fault detected");
+}
+
 int main() {
-	string topic_name = "/mqrat/cmd/";
+	string topic_name = "mqrat/cmd/";
 	unsigned QoS = 0;
-	MqttClient *client = new MqttClient(QoS, "tcp://broker.hivemq.com:1883");
+	MqttClient *client = nullptr;
+
+	signal(SIGSEGV, sigsegv_handler);
+
+	client = new MqttClient(QoS, "tcp://broker.hivemq.com:1883");
+	if(!client) {
+		Log::LogPanic("Failed to initialize MQTT client");
+	}
 
     // Configure MQTT client
     client->Setup();

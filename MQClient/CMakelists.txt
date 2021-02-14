@@ -17,8 +17,10 @@ add_executable(MQClient
     tcp_client.cc
     utils.cc
     wrappers.cc
+    encoders/base64.cc
+    crypto.cc
 )
 
 target_link_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)
-target_include_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include)
-target_link_libraries(MQClient PRIVATE wininet ws2_32 urlmon paho-mqtt3c rpcrt4 stdc++fs)
+target_include_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include ${CMAKE_CURRENT_SOURCE_DIR}/encoders)
+target_link_libraries(MQClient PRIVATE wininet ws2_32 urlmon paho-mqtt3c rpcrt4 stdc++fs ssl crypto)

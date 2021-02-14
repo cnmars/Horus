@@ -45,12 +45,34 @@ public:
 	void Publish(string data, string topic);	
 	
 	/**
+	 * @brief Notify server about something wrong (encrypted)
+	 * @param rsa RSA context
+	 * 
+	 */
+	void SendError(void *rsa);
+
+	/**
+	 * @brief Notify server about something wrong
+	 * 
+	 */
+	void SendError();
+
+	/**
+	 * @brief Publishes a encrypted message into a predetermined topic
+	 * 
+	 * @param data message
+	 * @param topic topic name
+	 * @param rsa RSA context
+	 */
+	void Publish(string data, string topic, void *RSACipher);
+
+	/**
 	 * @brief ublishes a message into a predetermined topic
 	 * 
 	 * @param data Message to be published
 	 * @param topic Topic name
 	 */
-	void Publish(vector<string> data, string topic);
+	void Publish(vector<string> data, string topic, void *RSACipher);
 
 	/**
 	 * @brief 

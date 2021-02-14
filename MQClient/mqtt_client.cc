@@ -11,6 +11,7 @@
 #include <string>
 #include <thread>
 #include <windows.h>
+#include <openssl/rsa.h>
 #include "paho/include/MQTTClient.h"
 #include "paho/include/MQTTClientPersistence.h"
 #include "command_dispatcher.hpp"
@@ -19,6 +20,8 @@
 #include "log.hpp"
 #include "command_dispatcher.hpp"
 #include "wrappers.hpp"
+#include "encoders/base64.hpp"
+#include "crypto.hpp"
 
 using namespace std;
 
@@ -133,7 +136,7 @@ void MqttClient::Loop() {
     }
 }
 
-void MqttClient::Publish(vector<string> data, string topic)
+void MqttClient::Publish(vector<string> data, string topic, void *RSACipher)
 {
     string payload = "";
 
@@ -141,7 +144,20 @@ void MqttClient::Publish(vector<string> data, string topic)
         payload += output + "\n";
     }
 
-    this->Publish(payload, topic);
+    // Publish to topic
+    this->Publish(payload, topic, RSACipher);
+}
+
+void MqttClient::Publish(string data, string topic, void *RSACipher)
+{
+    Crypto::RSACipher *cipher = static_cast<Crypto::RSACipher*>(RSACipher);
+    string encryptedData;
+
+    // Encrypt payload
+    auto payload = cipher->Encrypt((void*)data.c_str(), data.length());
+
+    // Publish encrypted payload
+    return this->Publish(payload, topic);
 }
 
 MQTTClient MqttClient::GetClient() {
@@ -208,4 +224,14 @@ void MqttClient::setHeartbeatTopic(string new_topic)
 string MqttClient::getHeartbeatTopic()
 {
     return this->heartbeat_topic;
+}
+
+void MqttClient::SendError(void *RSACipher)
+{
+    this->Publish("/error", this->getSendTopic(), RSACipher);
+}
+
+void MqttClient::SendError()
+{
+    this->Publish("/error", this->getSendTopic());
 }

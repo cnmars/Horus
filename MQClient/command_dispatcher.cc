@@ -9,6 +9,9 @@
 
 #include <string>
 #include <thread>
+#include <memory>
+#include <cstring>
+#include <stdexcept>
 #include "command_dispatcher.hpp"
 #include "command_processor.hpp"
 #include "mqtt_client.hpp"
@@ -52,12 +55,32 @@ void CommandDispatcher::Dispatch()
         return;
     }
 
+    allocator<char> a1;
+
+    auto buff = a1.allocate(msg->payloadlen);
+
+    if(!buff) {
+        Log::LogPanic("Failed to allocate memory");
+    }
+
+    // Initialize memory
+    memset(buff, 0, msg->payloadlen);
+
+    // Copy payload into buffer
+    memcpy(buff, msg->payload, msg->payloadlen);
+
     string command = string(reinterpret_cast<char*>(msg->payload));
     CommandProcessor cp(command, static_cast<MqttClient*>(this->client));
 
-    // Analyse command syntax
-    cp.Process();
+    try {
+
+        // Analyse command syntax
+        cp.Process();
+    } catch(std::runtime_error& re) {
+        printf("Runtime error detected: %s\n", re.what());
+    }
 
     // Free used memory
     MQTTClient_freeMessage(&msg);
+    a1.deallocate(buff, msg->payloadlen);
 }

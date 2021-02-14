@@ -33,7 +33,6 @@ class CommandProcessor {
 		 * 
 		 */
 		void Process();
-		
 	private:
 		/**
 		 * @brief Command to be executed
@@ -41,6 +40,18 @@ class CommandProcessor {
 		 */
 		string command;
 		
+		/**
+		 * @brief Public key block
+		 * 
+		 */
+		string public_key;
+
+		/**
+		 * @brief Length of public key string
+		 * 
+		 */
+		size_t public_key_len;
+
 		/**
 		 * @brief Pointer to MQTT client
 		 * 

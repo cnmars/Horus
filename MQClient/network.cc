@@ -7,9 +7,9 @@
 	que estejam sendo utilizadas para prejudicar terceiros.
 */
 
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <wininet.h>
-#include <ws2tcpip.h>
 #include <cassert>
 #include <iostream>
 #include <iterator>

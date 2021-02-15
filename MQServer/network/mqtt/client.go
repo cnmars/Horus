@@ -19,6 +19,9 @@ const outputTopic string = "output"
 // cmdTopic name of subtopic used to send commands
 const cmdTopic string = "command"
 
+// handshakeTopic topic used to send public key to clients
+const handshakeTopic string = "hs"
+
 // client is a handle to mqtt client
 var client MQTT.Client
 

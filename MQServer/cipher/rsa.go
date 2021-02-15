@@ -59,3 +59,15 @@ func Decrypt(data string) (decryptedData []byte, err error) {
 
 	return
 }
+
+// DecryptBytes decrypts the specified data using private key
+func DecryptBytes(data []byte) (decryptedData []byte, err error) {
+	privateKey := EncryptionKeys.Private
+	decryptedData, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, data)
+	if err != nil {
+		log.Printf("[ERROR] Failed to decrypt data: %v", err)
+		return
+	}
+
+	return
+}

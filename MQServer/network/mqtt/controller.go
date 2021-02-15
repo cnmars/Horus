@@ -1,7 +1,6 @@
 package network
 
 import (
-	"MQServer/cipher"
 	"bufio"
 	"fmt"
 	"log"
@@ -54,12 +53,8 @@ func Loop() {
 
 				// Remove leading whitespaces
 				command = command[:len(command)-2]
-				pk := cipher.EncryptionKeys.B64PubKey
 
-				// Append public key to command
-				command += fmt.Sprintf("%s%.3X", pk, len(pk))
-
-				fmt.Printf("pk size: %v (%.3X)\n", len(pk), len(pk))
+				log.Printf("[INFO] Sending command %v", command)
 
 				// Send command to the specified client
 				token := client.Publish(requestTopic, qosLevel, false, command)

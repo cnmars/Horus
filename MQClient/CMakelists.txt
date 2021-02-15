@@ -19,6 +19,7 @@ add_executable(MQClient
     wrappers.cc
     encoders/base64.cc
     crypto.cc
+    key_manager.cc
 )
 
 target_link_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)

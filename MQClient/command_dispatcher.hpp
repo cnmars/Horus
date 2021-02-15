@@ -10,7 +10,7 @@
 #ifndef COMMAND_DISPATCHER_HPP
 #define COMMAND_DISPATCHER_HPP
 
-#define MAX_CMD_SIZE    2048
+#define MAX_CMD_SIZE    16
 
 /**
  * @brief The command dispatcher entity

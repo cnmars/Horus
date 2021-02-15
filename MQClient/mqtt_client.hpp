@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include "crypto.hpp"
+#include "key_manager.hpp"
 
 #define CLIENT_ID_LENGTH    32
 
@@ -24,10 +26,36 @@ using namespace std;
 class MqttClient {
 
 public:
+	/**
+	 * @brief Construct a new Mqtt Client object
+	 * 
+	 */
 	MqttClient();
+	
+	/**
+	 * @brief Destroy the Mqtt Client object
+	 * 
+	 */
 	~MqttClient();
+
+	/**
+	 * @brief Construct a new Mqtt Client object
+	 * 
+	 * @param qos_level Quality of service
+	 * @param broker_hostname Broker hostname
+	 */
 	explicit MqttClient(unsigned qos_level, string broker_hostname);
 	
+	/**
+	 * @brief Construct a new Mqtt Client object
+	 * 
+	 * @param qos_level QoS level
+	 * @param broker_hostname Broker hostname
+	 * @param cipher Cipher used to encrypt payloads
+	 */
+	explicit MqttClient(unsigned qos_level, string broker_hostname, Crypto::RSACipher *cipher);
+
+
 	/**
 	 * @brief Set the up mqtt client object
 	 * 
@@ -35,21 +63,13 @@ public:
 	 * @return false on error
 	 */
 	bool Setup();
-
-	/**
-	 * @brief Publishes a message into a predetermined topic
-	 * 
-	 * @param data message
-	 * @param topic topic name
-	 */
-	void Publish(string data, string topic);	
 	
 	/**
 	 * @brief Notify server about something wrong (encrypted)
-	 * @param rsa RSA context
 	 * 
+	 * @param cipher Handle to RSACipher
 	 */
-	void SendError(void *rsa);
+	void SendErrorEncrypted(Crypto::RSACipher *cipher);
 
 	/**
 	 * @brief Notify server about something wrong
@@ -62,26 +82,42 @@ public:
 	 * 
 	 * @param data message
 	 * @param topic topic name
-	 * @param rsa RSA context
 	 */
-	void Publish(string data, string topic, void *RSACipher);
+	void Publish(string data, string topic);
 
 	/**
-	 * @brief ublishes a message into a predetermined topic
+	 * @brief Publishes a message into a predetermined topic
 	 * 
 	 * @param data Message to be published
 	 * @param topic Topic name
 	 */
-	void Publish(vector<string> data, string topic, void *RSACipher);
+	void Publish(vector<string> data, string topic);
 
 	/**
-	 * @brief 
+	 * @brief Publishes a message into a predetermined topic
 	 * 
-	 * @param data 
-	 * @param topic 
-	 * @param QoS 
+	 * @param data message
+	 * @param topic topic name
+	 * @param QoS Quality of service
+	 * @param retained Retained flag
 	 */
 	void Publish(string data, string topic, unsigned QoS, bool retained);
+
+	/**
+	 * @brief Publishes a encrypted message into a predetermined topic
+	 * 
+	 * @param data payload
+	 * @param topic topic name
+	 */
+	void PublishEncrypted(string data, string topic);
+
+	/**
+	 * @brief Publishes a encrypted message into a predetermined topic
+	 * 
+	 * @param data Data
+	 * @param topic Topic name
+	 */
+	void PublishEncrypted(vector<string> data, string topic);
 
 	/**
 	 * @brief Subscribe to a specific topic
@@ -183,6 +219,28 @@ public:
 	 * @return string 
 	 */
 	string getHeartbeatTopic();
+
+	/**
+	 * @brief Set the Handshake Topic object
+	 * 
+	 * @param topic 
+	 */
+	void setHandshakeTopic(string topic);
+
+	/**
+	 * @brief Get the Cipher object
+	 * 
+	 * @return Crypto::RSACipher* 
+	 */
+	Crypto::RSACipher *getCipher();
+
+	/**
+	 * @brief Get the Key Manager object
+	 * 
+	 * @return KeyManager* 
+	 */
+	KeyManager *GetKeyManager();
+
 private:
 	/**
 	 * @brief Configure MQTT client options
@@ -207,8 +265,11 @@ private:
 	string send_topic;
 	string recv_topic;
 	string heartbeat_topic;
-
+	string handshake_topic;
 	const string heartbeat_payload = "/hb";
+
+	Crypto::RSACipher *cipher;
+	KeyManager *manager;
 };
 
 #endif

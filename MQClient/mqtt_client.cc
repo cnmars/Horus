@@ -22,6 +22,7 @@
 #include "wrappers.hpp"
 #include "encoders/base64.hpp"
 #include "crypto.hpp"
+#include "key_manager.hpp"
 
 using namespace std;
 
@@ -31,6 +32,7 @@ MqttClient::MqttClient() {
     this->broker_host = "127.0.0.1";
     this->reconnect_timeout = 5000;
     dispatcher = new CommandDispatcher(nullptr, this, nullptr);
+    manager = new KeyManager();
 }
 
 MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
@@ -39,11 +41,23 @@ MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
     this->broker_host = broker_hostname;
     this->reconnect_timeout = 5000;
     dispatcher = new CommandDispatcher(nullptr, this, nullptr);
+    manager = new KeyManager();
+}
+
+MqttClient::MqttClient(unsigned qos_level, string broker_hostname, Crypto::RSACipher *cipher) {
+	this->qos = qos_level;
+    this->client = nullptr;
+    this->broker_host = broker_hostname;
+    this->reconnect_timeout = 5000;
+    this->cipher = cipher;
+    dispatcher = new CommandDispatcher(nullptr, this, nullptr);
+    manager = new KeyManager();
 }
 
 MqttClient::~MqttClient() {
     Log::LogInfo("MQTT client finished");
     MQTTClient_free(this->client);
+    delete manager;
 }
 
 bool MqttClient::Setup() {
@@ -102,6 +116,13 @@ void MqttClient::Connect() {
     }
 }
 
+void MqttClient::Loop() {
+    while(true) {
+		MQTTClient_yield();
+        Sleep(this->yield_delay_ms);
+    }
+}
+
 void MqttClient::Publish(string data, string topic, unsigned QoS, bool retained) {
 	MQTTClient_deliveryToken token;
 	auto delivery_timeout = 5000UL;
@@ -115,6 +136,8 @@ void MqttClient::Publish(string data, string topic, unsigned QoS, bool retained)
 	MQTTClient_publish(client, topic.c_str(), data.length(), 
                     reinterpret_cast<const void*>(data.c_str()), QoS, retained, &token);
     
+    Log::LogInfo("Waiting message to be published");
+
 	// Wait for message delivery
 	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
     if(status != MQTTCLIENT_SUCCESS) {
@@ -129,14 +152,7 @@ void MqttClient::Publish(string data, string topic) {
     return Publish(data, topic, this->qos, false);
 }
 
-void MqttClient::Loop() {
-    while(true) {
-		MQTTClient_yield();
-        Sleep(this->yield_delay_ms);
-    }
-}
-
-void MqttClient::Publish(vector<string> data, string topic, void *RSACipher)
+void MqttClient::Publish(vector<string> data, string topic)
 {
     string payload = "";
 
@@ -145,18 +161,6 @@ void MqttClient::Publish(vector<string> data, string topic, void *RSACipher)
     }
 
     // Publish to topic
-    this->Publish(payload, topic, RSACipher);
-}
-
-void MqttClient::Publish(string data, string topic, void *RSACipher)
-{
-    Crypto::RSACipher *cipher = static_cast<Crypto::RSACipher*>(RSACipher);
-    string encryptedData;
-
-    // Encrypt payload
-    auto payload = cipher->Encrypt((void*)data.c_str(), data.length());
-
-    // Publish encrypted payload
     return this->Publish(payload, topic);
 }
 
@@ -172,10 +176,22 @@ void MqttClient::OnConnectionLost(void *context, char *cause) {
 
 int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, void *message) {
 	
+    static bool pk_saved = false;
+
 	Log::LogInfo("Message received on topic " + string(topic));
 
-    // Dispatch received command
     auto msg = static_cast<MQTTClient_message*>(message);
+
+    // Check if is the handshake message
+    if(string(topic).find("/hs") != string::npos && !(pk_saved)) {
+        // Save public key into disk
+        manager->SavePublicKey(static_cast<char*>(msg->payload));
+        pk_saved = true;
+
+        return 0;
+    }
+
+    // Dispatch received command
     auto dp = static_cast<CommandDispatcher*>(dispatcher);
     
     dp->setMessage(msg);
@@ -226,12 +242,49 @@ string MqttClient::getHeartbeatTopic()
     return this->heartbeat_topic;
 }
 
-void MqttClient::SendError(void *RSACipher)
+void MqttClient::SendErrorEncrypted(Crypto::RSACipher *cipher)
 {
-    this->Publish("/error", this->getSendTopic(), RSACipher);
+    this->Publish("/error", this->getSendTopic());
 }
 
 void MqttClient::SendError()
 {
     this->Publish("/error", this->getSendTopic());
+}
+
+void MqttClient::PublishEncrypted(string data, string topic)
+{
+    auto packet = reinterpret_cast<void*>(const_cast<char*>(data.c_str()));
+
+    // Encrypt payload
+    auto payload = cipher->Encrypt(packet, data.length());
+
+    // Publish encrypted payload
+    this->Publish(payload, topic);
+}
+
+void MqttClient::PublishEncrypted(vector<string> data, string topic)
+{
+    string payload;
+
+    // Insert a new line character between elements
+    for(auto c : data) {
+        payload.append(c + "\n");    
+    }
+
+    return this->PublishEncrypted(payload, topic);
+}
+
+Crypto::RSACipher *MqttClient::getCipher()
+{
+    return this->cipher;
+}
+
+void MqttClient::setHandshakeTopic(string topic)
+{
+    this->handshake_topic = topic;
+}
+
+KeyManager *MqttClient::GetKeyManager() {
+    return this->manager;
 }

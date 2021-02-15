@@ -21,55 +21,56 @@
 
 using namespace Crypto;
 
+#define CMDLEN_PAYLOAD_SIZE 3
+
 CommandProcessor::CommandProcessor(string cmd, void *client)
 {
     this->command = cmd;
     this->client = client;
     this->public_key_len = 0;
-    this->public_key = "";
 }
 
 void CommandProcessor::Process()
 {
-    string output = "";
+    RSA *rsa = nullptr;
     auto client = static_cast<MqttClient*>(this->client);
     auto send_topic = client->getSendTopic();
-    RSACipher *cipher = new RSACipher();
+    auto cipher = client->getCipher();
 
-    // read the length of public key
-    auto s_pubkey_len = this->command.substr(command.length() - 3);
-    public_key_len = std::strtoul(s_pubkey_len.c_str(), nullptr, 16);
-    auto command_len = command.length() - public_key_len- s_pubkey_len.length();
-    auto raw_command = command.substr(0, command_len);
-    auto public_key = command.substr(raw_command.length(), public_key_len);
-    
-    // Update command variable
-    command = raw_command;
+    try 
+    {
+        // Load public key from disk
+        this->public_key = client->GetKeyManager()->ReadPublicKey();
 
-    // Decode public key
-    public_key = base64_decode(public_key);
-
-    Log::LogInfo("public key:\n" + public_key);
-    Log::LogInfo("raw command: " + raw_command);
-
-    try {
         // Load public key into memory
-        cipher->LoadPublicKey(public_key.c_str(), public_key.length());
+        rsa = (RSA*)cipher->LoadPublicKey(this->public_key.c_str(), this->public_key.length());
     
         // Process command
-        if(command == "list-files") {
+        if(command == "list-files") 
+        {
             auto files = API::FileSystem::ListFiles();
-            client->Publish(files, send_topic, cipher);
-        } else {
+            client->PublishEncrypted(files, send_topic);
+        } else if(command == "get-osver") 
+        {
+            auto version = API::FileSystem::GetWindowsVersion();
+            client->PublishEncrypted(version, send_topic);
+        } else 
+        {
             client->SendError();
             Log::LogInfo("Unknown command received");
         }
 
     } catch(std::runtime_error& e) {
         Log::LogError(string("Something goes wrong: ") + e.what());
+        client->SendError();
         goto free_resources;
     }
 
 free_resources:
-    delete cipher;
+    Log::LogInfo("Releasing resources");
+
+    if(rsa != nullptr) {
+        // Free resources
+        RSA_free(rsa);
+    }
 }

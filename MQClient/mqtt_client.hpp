@@ -15,6 +15,7 @@
 #include <vector>
 #include "crypto.hpp"
 #include "key_manager.hpp"
+#include "paho/include/MQTTClient.h"
 
 #define CLIENT_ID_LENGTH    32
 
@@ -53,7 +54,7 @@ public:
 	 * @param broker_hostname Broker hostname
 	 * @param cipher Cipher used to encrypt payloads
 	 */
-	explicit MqttClient(unsigned qos_level, string broker_hostname, Crypto::RSACipher *cipher);
+	explicit MqttClient(unsigned qos_level, string broker_hostname, Crypto::RSACipher *cipher, string client_id);
 
 
 	/**
@@ -127,6 +128,14 @@ public:
 	void Subscribe(std::string topic);
 
 	/**
+	 * @brief Subscribe to multiple topics
+	 * 
+	 * @param topics 
+	 * @param qos 
+	 */
+	void Subscribe(char* const* tops, int *qos, int len);
+
+	/**
 	 * @brief Subscribe to internal topic
 	 * 
 	 */
@@ -156,7 +165,7 @@ public:
 	 * @param message 
 	 * @return int 
 	 */
-	int OnMessageReceived(void *context, char *topic, int topic_len, void *message);
+	int OnMessageReceived(void *context, char *topic, int topic_len, MQTTClient_message *message);
 
 	/**
 	 * @brief Called when the message is delivered to broker
@@ -266,8 +275,8 @@ private:
 	string recv_topic;
 	string heartbeat_topic;
 	string handshake_topic;
+	string client_id;
 	const string heartbeat_payload = "/hb";
-
 	Crypto::RSACipher *cipher;
 	KeyManager *manager;
 };

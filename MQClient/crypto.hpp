@@ -51,9 +51,9 @@ namespace Crypto
              * 
              * @param buffer 
              * @param len
-             * @return const char* Base64 encrypted string
+             * @return char* Base64 encrypted string
              */
-            const char *Encrypt(void *buffer, size_t len);
+            char *Encrypt(const char *buffer, size_t len);
 
             /**
              * @brief 

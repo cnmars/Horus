@@ -15,8 +15,8 @@ jobs:
     - name: Install OpenSSL
       run: choco install openssl
       
-    #- name: Install/Upgrade MinGW
-      #run: choco upgrade mingw
+    - name: Install/Upgrade MinGW
+      run: choco upgrade mingw
   
     - name: Show Compiler Version
       run: g++ -v

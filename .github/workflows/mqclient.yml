@@ -13,22 +13,18 @@ jobs:
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: [windows-latest]
-    strategy:
-      fail-fast: false
-      matrix:
-        include: [
-          { msystem: MINGW64, arch: x86_64 },
-          { msystem: MINGW32, arch: i686   }
-        ]
 
     steps:
     - uses: actions/checkout@v2
 
-    - uses: msys2/setup-msys2@v2
+    - name: Install MinGW
+      uses: egor-tensin/setup-mingw@v2
       with:
-        update: true
-        install: git msys2-devel base-devel binutils mingw-w64-${{ matrix.arch }}-toolchain
-        msystem: MINGW32
+        platform: x86
+        cc: 1
+  
+    - name: Show Compiler Version
+      run: g++ -v
 
     - name: Generate makefiles
       # Use a bash shell so we can use the same syntax for environment variable

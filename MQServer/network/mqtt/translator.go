@@ -32,6 +32,11 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 		return
 	}
 
+	if len(payload) == 0 {
+		fmt.Printf("[ERROR] Empty payload received")
+		return
+	}
+
 	// Extract client ID
 	remoteClientID = levels[2]
 
@@ -65,19 +70,22 @@ func translateMessage(client MQTT.Client, message MQTT.Message) {
 
 		if subTopic == outputTopic {
 			// Decrypt command response
-			fmt.Printf("[RESPONSE] %v\n", payload)
 
-			var dest []byte = make([]byte, 8192)
+			size := base64.RawStdEncoding.DecodedLen(len(payload))
+
+			var dest []byte = make([]byte, size-1)
 
 			_, decodeFail := base64.StdEncoding.Decode(dest, []byte(payload))
 			if decodeFail != nil {
-				fmt.Printf("[ERROR] Failed to decode payload: %v\n", decodeFail)
+				// Payload is not base64 encoded
+				log.Printf("[ERROR] Failed to decode from base64: %v", decodeFail)
+				fmt.Printf("Response from %v: %v\n", remoteClientID, payload)
 			} else {
 				decryptedPayload, decErr := cipher.DecryptBytes(dest)
 				if decErr == nil {
-					log.Printf("Decrypted response from %v: %v", remoteClientID, string(decryptedPayload))
+					fmt.Printf("Decrypted response from %v: %v\n", remoteClientID, string(decryptedPayload))
 				} else {
-					log.Printf("Response from %v: %v", remoteClientID, payload)
+					fmt.Printf("Response from %v: %v\n", remoteClientID, payload)
 				}
 			}
 

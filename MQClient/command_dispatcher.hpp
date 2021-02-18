@@ -10,6 +10,9 @@
 #ifndef COMMAND_DISPATCHER_HPP
 #define COMMAND_DISPATCHER_HPP
 
+#include "command_dispatcher.hpp"
+#include "mqtt_client.hpp"
+
 #define MAX_CMD_SIZE    16
 
 /**
@@ -19,13 +22,13 @@
 class CommandDispatcher {
     public:
         CommandDispatcher();
-        explicit CommandDispatcher(void *msg, void *client, char *topic);
+        explicit CommandDispatcher(MQTTClient_message *msg, MqttClient *client, char *topic);
         void Dispatch();
-        void setMessage(void *new_msg);
+        void setMessage(MQTTClient_message *new_msg);
         void setTopic(char *topic_name);
     private:
-        void *message;
-        void *client;
+        MQTTClient_message *message;
+        MqttClient *client;
         char *topic;
 };
 

@@ -5,8 +5,15 @@ on: push
 jobs:
   build:
     runs-on: [ubuntu-latest, windows-latest]
-
+  
     steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.13
+
     - name: Get Packages
       shell: bash
       working-directory: ${{github.workspace}}/MQServer
@@ -15,4 +22,4 @@ jobs:
     - name: Build server
       shell: bash
       working-directory: ${{github.workspace}}/MQServer
-      run: go build
+      run: go build -v

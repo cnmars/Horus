@@ -2,7 +2,6 @@ package cipher
 
 import (
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
 	"log"
@@ -28,22 +27,20 @@ func saveKeys(keys *RSAKeys) {
 		Bytes: publicBlockBytes,
 	})
 
-	// Encode to base64
-	b64PrivKey := base64.RawStdEncoding.EncodeToString(privateKeyBytes)
-	b64PubKey := base64.RawStdEncoding.EncodeToString(publicKeyBlock)
-
-	keys.B64PrivKey = b64PrivKey
-	keys.B64PubKey = b64PubKey
+	keys.B64PrivKey = string(privateKeyBytes)
+	keys.B64PubKey = string(publicKeyBlock)
 
 	// Save to disk
-	ioutil.WriteFile(privateKeyFilename, []byte(privateKeyBytes), 0677)
-	ioutil.WriteFile(publicKeyFilename, []byte(publicKeyBlock), 0677)
+	ioutil.WriteFile(privateKeyFilename, privateKeyBytes, 0777)
+	ioutil.WriteFile(publicKeyFilename, publicKeyBlock, 0777)
 }
 
+// GetPublicKeyFilename returns the name of file where public key is saved
 func GetPublicKeyFilename() string {
 	return publicKeyFilename
 }
 
+// GetPrivateKeyFilename returns the name of file where private key is saved
 func GetPrivateKeyFilename() string {
 	return privateKeyFilename
 }

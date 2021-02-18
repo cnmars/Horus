@@ -44,7 +44,4 @@ jobs:
         working-directory: ${{github.workspace}}/MQClient/build
         shell: bash
         # Execute the build.  You can specify a specific target with "--target <NAME>"
-        env:
-          CXX_FLAGS: --std=c++20
-          
         run: cmake --build . --config $BUILD_TYPE

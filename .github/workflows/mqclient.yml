@@ -17,6 +17,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        msystem: MINGW32
+
     - name: Generate makefiles
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system

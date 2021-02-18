@@ -11,9 +11,13 @@ jobs:
     runs-on: [windows-latest]
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/cache@v1
   
+    - name: Set vcpkg root
+      run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" | Out-File -FilePath $env:GITHUB_ENV -Append
+      
     - name: Install OpenSSL
-      run: choco install openssl
+      run: vcpkg install openssl:x86-windows
       
     - name: Install/Upgrade MinGW
       run: choco upgrade mingw

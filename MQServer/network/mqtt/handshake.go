@@ -23,5 +23,5 @@ func sendPublicKey(clientID string) {
 	// Check for errors
 	waitForToken(token)
 
-	log.Printf("[INFO] Public key sent: %v", payload)
+	log.Printf("[INFO] Public key sent")
 }

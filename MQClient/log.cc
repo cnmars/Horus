@@ -13,6 +13,8 @@
 
 using namespace std;
 
+#define print_new_line()	printf("\n")
+
 void Log::LogPanic(string msg) {
 	
     cout << "[FATAL] " << msg << endl;
@@ -25,4 +27,34 @@ void Log::LogError(string msg) {
 
 void Log::LogInfo(std::string message) {
 	cout << "[INFO] " << message << endl;
+}
+
+void Log::LogInfo(const char *message, ...) {
+	va_list list;
+
+	printf("[INFO] ");
+	va_start(list, message);
+	vfprintf(stdout, message, list);
+	va_end(list);
+	print_new_line();
+}
+
+void Log::LogError(const char *message, ...) {
+	va_list list;
+
+	printf("[ERROR] ");
+	va_start(list, message);
+	vfprintf(stdout, message, list);
+	va_end(list);
+	print_new_line();
+}
+
+void Log::LogPanic(const char *message, ...) {
+	va_list list;
+
+	printf("[CRITICAL] ");
+	va_start(list, message);
+	vfprintf(stdout, message, list);
+	va_end(list);
+	print_new_line();
 }

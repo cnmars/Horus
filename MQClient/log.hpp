@@ -11,9 +11,9 @@
 #define MQRAT_LOG_HPP
 
 #include <string>
+#include <cstdarg>
 
 using namespace std;
-
 
 class Log {
     public:
@@ -37,6 +37,28 @@ class Log {
          * @param message Message to be printed
          */
         static void LogInfo(string message);
+
+        /**
+         * @brief 
+         * 
+         * @param message 
+         * @param ... 
+         */
+        static void LogInfo(const char *message, ...);
+
+        /**
+         * @brief 
+         * 
+         * @param message 
+         */
+        static void LogError(const char *message, ...);
+
+        /**
+         * @brief 
+         * 
+         * @param message 
+         */
+        static void LogPanic(const char *message, ...);
 };
 
 #endif

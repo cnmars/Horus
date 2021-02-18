@@ -1,6 +1,7 @@
 package cipher
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"log"
@@ -49,9 +50,12 @@ func Encrypt(data string) (encryptedData []byte, err error) {
 }
 
 // Decrypt function decrypts the specified data
-func Decrypt(data string) (decryptedData []byte, err error) {
+func Decrypt(encryptedData string) (decryptedData []byte, err error) {
 	privateKey := EncryptionKeys.Private
-	decryptedData, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, []byte(data))
+
+	log.Printf("[INFO] Ciphertext size: %v", len(encryptedData))
+
+	decryptedData, err = privateKey.Decrypt(nil, []byte(encryptedData), &rsa.OAEPOptions{Hash: crypto.SHA1})
 	if err != nil {
 		log.Printf("[ERROR] Failed to decrypt data: %v", err)
 		return
@@ -62,12 +66,5 @@ func Decrypt(data string) (decryptedData []byte, err error) {
 
 // DecryptBytes decrypts the specified data using private key
 func DecryptBytes(data []byte) (decryptedData []byte, err error) {
-	privateKey := EncryptionKeys.Private
-	decryptedData, err = rsa.DecryptPKCS1v15(rand.Reader, privateKey, data)
-	if err != nil {
-		log.Printf("[ERROR] Failed to decrypt data: %v", err)
-		return
-	}
-
-	return
+	return Decrypt(string(data))
 }

@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install MinGW
-      run: choco install mingw
+    - name: Install/Upgrade MinGW
+      run: choco upgrade mingw
   
     - name: Show Compiler Version
       run: g++ -v

@@ -73,8 +73,6 @@ func Loop() {
 		case <-commandProcessed:
 			break
 		}
-
-		fmt.Println("[INFO] Response received")
 	}
 }
 

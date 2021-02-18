@@ -18,12 +18,44 @@
  */
 class KeyManager {
     public:
+		/**
+		 * @brief Construct a new Key Manager object
+		 * 
+		 */
 		KeyManager();
-        void SavePublicKey(std::string handshake_message);
+
+		/**
+		 * @brief Saves the public key
+		 * 
+		 * @param pk Public key
+		 * @param len Key length
+		 */
+        void SavePublicKey(char *pk, size_t len);
+
+		/**
+		 * @brief Reads the saved public key from disk (or memory)
+		 * 
+		 * @return std::string 
+		 */
         std::string ReadPublicKey();
+
+		/**
+		 * @brief Gets the filename where public key is saved
+		 * 
+		 * @return std::string Filename
+		 */
 		std::string GetFilename();
 	private:
+		/**
+		 * @brief Filename used to store key
+		 * 
+		 */
 		std::string filename;
+
+		/**
+		 * @brief Public key
+		 * 
+		 */
 		std::string pk;
 };
 

@@ -8,6 +8,7 @@
 */
 
 #include <fstream>
+#include <cstring>
 #include "encoders/base64.hpp"
 #include "key_manager.hpp"
 
@@ -22,19 +23,18 @@ string KeyManager::GetFilename() {
 	return this->filename;
 }
 
-void KeyManager::SavePublicKey(string pk) {
+void KeyManager::SavePublicKey(char *pk, size_t len) {
 	ofstream file(this->filename, ios_base::out);
-	
-	// Decode public key and save
-	auto decoded_pk = base64_decode(pk);
 
-	file << decoded_pk;
+	// Save key
+	file.write(pk, len);
+
+	// Close file
 	file.close();
 }
 
 string KeyManager::ReadPublicKey() {
 	static bool cached = false;
-	string public_key;
 
 	if(!cached) {
 
@@ -42,16 +42,28 @@ string KeyManager::ReadPublicKey() {
 		ifstream file(this->filename, ios_base::in);
 		
 		// Read public key into memory
-		file >> public_key;
+		file.seekg(0, file.end);
+		auto size = file.tellg();
+		file.seekg(0, file.beg);
+
+		// Allocate memory
+		auto data = new char[size];
+		if(!data) {
+			throw std::runtime_error("Failed to allocate memory to store public key");
+		}
+
+		file.read(data, size);
 
 		// Closes file
 		file.close();
 
-		pk = public_key;
+		pk = string(data);
 
+		// Free memory
+		delete[] data;
+
+		// Update flag
 		cached = true;
-
-		return public_key;
 	}
 	
 	// returns the previously public key stored in memory

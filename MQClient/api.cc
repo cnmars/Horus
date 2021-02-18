@@ -11,6 +11,7 @@
 #include <filesystem>
 #include "api.hpp"
 #include "fs.hpp"
+#include "log.hpp"
 
 using namespace std;
 
@@ -30,10 +31,25 @@ vector<string> API::FileSystem::ListFiles()
 std::string API::FileSystem::GetWindowsVersion()
 {
     OSVERSIONINFOA version;
+    char szVersion[BUFSIZ];
+
+    RtlSecureZeroMemory(&version, sizeof(OSVERSIONINFO));
+    version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
     if(GetVersionExA(&version)) {
-        return string(version.szCSDVersion);
+        
+        // Build string with version information
+        snprintf(szVersion, 
+                BUFSIZ, 
+                "%u.%u.%u", version.dwMajorVersion,
+                version.dwMinorVersion,
+                version.dwBuildNumber
+        );
+
+        Log::LogInfo("Captured version: %s", szVersion);
+
+        return string(szVersion);
     }
 
-    return "";
+    return "failed";
 }

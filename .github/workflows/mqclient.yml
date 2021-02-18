@@ -15,8 +15,8 @@ jobs:
     - name: Install OpenSSL
       run: choco install openssl
       
-    - name: Install/Upgrade MinGW
-      run: choco upgrade mingw
+    #- name: Install/Upgrade MinGW
+      #run: choco upgrade mingw
   
     - name: Show Compiler Version
       run: g++ -v
@@ -40,8 +40,11 @@ jobs:
     needs: configure
     
     steps:
+      - uses: actions/checkout@v2
       - name: Build
         working-directory: ${{github.workspace}}\MQClient\build
         shell: bash
+        env:
+          CXX_FLAGS: --std=c++17
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build $PWD --config $BUILD_TYPE

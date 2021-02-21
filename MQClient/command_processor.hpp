@@ -11,6 +11,7 @@
 #define COMMAND_PROCESSOR_HPP
 
 #include <string>
+#include <functional>
 
 using namespace std;
 
@@ -57,6 +58,11 @@ class CommandProcessor {
 		 * 
 		 */
 		void *client;
+};
+
+struct Command {
+    string name;
+    function<void*(void*)> callback;
 };
 
 #endif

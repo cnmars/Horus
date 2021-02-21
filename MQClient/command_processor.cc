@@ -51,17 +51,14 @@ void CommandProcessor::Process()
         rsa = (RSA*)cipher->LoadPublicKey(this->public_key.c_str(), this->public_key.length());
 
         // Checks if command has some parameter
+        string parameter;
         auto v = Utils::Split(command, ' ');
-        auto has_parameter = v->size() > 1;
-        string parameter("");
+        auto has_parameter = v.size() > 1;
 
         // Extract command parameter
         if(has_parameter) {
-            parameter = v->at(1);
+            parameter = v.at(1);
         }
-        
-        // Free memory
-        delete v;
 
         // Check if command is a valid command
         for(auto cmd : valid_commands) 

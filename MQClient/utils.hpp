@@ -53,10 +53,10 @@ public:
 	 * @brief Splits the specified string s using the delimiter delim
 	 * 
 	 * @param s String to split
+	 * @param t Splitted string
 	 * @param delim Delimiter
-	 * @return vector<string> A list of separated strings
 	 */
-	static vector<string> *Split(string&s, char delim);
+	static vector<string> Split(string s, char delim);
 };
 
 #endif

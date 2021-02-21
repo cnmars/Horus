@@ -61,3 +61,20 @@ std::string Utils::ToLower(std::string& s)
 
     return s;
 }
+
+vector<string> *Utils::Split(string&s, char delim)
+{
+    vector<string> *v = new vector<string>;
+    string elem = "";
+
+    for(auto c : s) {
+        if(c != delim) {
+            elem += c;
+        } else {
+            v->push_back(elem);
+            elem.clear();
+        }
+    }
+
+    return v;
+}

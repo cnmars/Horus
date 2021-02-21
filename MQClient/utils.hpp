@@ -10,7 +10,10 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include <vector>
 #include <string>
+
+using namespace std;
 
 /**
  * @brief General utilities
@@ -34,17 +37,26 @@ public:
 	/**
 	 * @brief 
 	 * 
-	 * @return std::string an string containing a ID
+	 * @return string an string containing a ID
 	 */
-	static std::string GenerateID();
+	static string GenerateID();
 	
 	/**
 	 * @brief Transforms a string to lowercase
 	 * 
 	 * @param s String
-	 * @return std::string Lowercase string 
+	 * @return string Lowercase string 
 	 */
-	static std::string ToLower(std::string& s);
+	static string ToLower(string& s);
+
+	/**
+	 * @brief Splits the specified string s using the delimiter delim
+	 * 
+	 * @param s String to split
+	 * @param delim Delimiter
+	 * @return vector<string> A list of separated strings
+	 */
+	static vector<string> *Split(string&s, char delim);
 };
 
 #endif

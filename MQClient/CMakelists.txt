@@ -5,6 +5,8 @@ project(MQClient)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED)
 
+find_package(OpenSSL REQUIRED)
+
 add_executable(MQClient
     api.cc
     command_dispatcher.cc
@@ -25,6 +27,7 @@ add_executable(MQClient
 set_property(TARGET MQClient PROPERTY CXX_STANDARD 20)
 set_property(TARGET MQClient PROPERTY CXX_STANDARD_REQUIRED ON)
 
+target_link_libraries(MQClient PRIVATE OpenSSL::SSL OpenSSL::Crypto)	
 target_link_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)
 target_include_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include ${CMAKE_CURRENT_SOURCE_DIR}/encoders)
-target_link_libraries(MQClient PRIVATE wininet ws2_32 urlmon paho-mqtt3c rpcrt4 stdc++fs ssl crypto)
+target_link_libraries(MQClient PRIVATE wininet ws2_32 urlmon paho-mqtt3c rpcrt4 stdc++fs)

@@ -51,14 +51,17 @@ void CommandProcessor::Process()
         rsa = (RSA*)cipher->LoadPublicKey(this->public_key.c_str(), this->public_key.length());
 
         // Checks if command has some parameter
-        string parameter;
+        string parameter = "";
         auto v = Utils::Split(command, ' ');
         auto has_parameter = v.size() > 1;
 
         // Extract command parameter
         if(has_parameter) {
-            parameter = v.at(1);
+            parameter = v[1];
+            command = v[0];
         }
+
+        Log::LogInfo("Parameter: %s", parameter.c_str());
 
         // Check if command is a valid command
         for(auto cmd : valid_commands) 
@@ -70,7 +73,7 @@ void CommandProcessor::Process()
 
                 // Check if command has parameters
                 if(has_parameter) {
-                    auto func = bind(cmd.callback, reinterpret_cast<void*>(&parameter));
+                    auto func = bind(cmd.callback, reinterpret_cast<void*>(const_cast<char*>(parameter.c_str())));
                     retval = func();
                 } else {
                     retval = cmd.callback(nullptr);
@@ -90,7 +93,7 @@ void CommandProcessor::Process()
         }
 
         // The command could not be recognized
-        throw std::runtime_error("command not found");
+        throw std::runtime_error("command not found: " + command);
 
     } catch(std::runtime_error& e) {
         Log::LogError(string("Something goes wrong: ") + e.what());

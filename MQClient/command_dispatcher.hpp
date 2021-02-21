@@ -13,7 +13,7 @@
 #include "command_dispatcher.hpp"
 #include "mqtt_client.hpp"
 
-#define MAX_CMD_SIZE    16
+#define MAX_CMD_SIZE    260
 
 /**
  * @brief The command dispatcher entity

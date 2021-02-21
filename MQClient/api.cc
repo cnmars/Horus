@@ -20,10 +20,12 @@ void *API::FileSystem::ListFiles(void *s)
     string file_list;
     string path = ".";
 
-    if(s != NULL) {
+    if(s != nullptr) {
         // Convert to string
-        path = static_cast<char*>(s);
+        path = string(static_cast<char*>(s));
     }
+
+    Log::LogInfo("Searching for files in %s", path.c_str());
 
     for(auto entry : filesystem::directory_iterator(path)) {
         auto filename = entry.path().filename().generic_string();
@@ -33,9 +35,11 @@ void *API::FileSystem::ListFiles(void *s)
 
     auto list = static_cast<char*>(malloc(file_list.length() * sizeof(char)));
     if(list == nullptr) {
-        Log::LogPanic("Failed to allocate memory: %s", strerror(errno));
+        Log::LogError("Failed to allocate memory: %s", strerror(errno));
+        return nullptr;
     }
 
+    // Copy file list to string
     strncpy(list, file_list.c_str(), file_list.length() - 1);
 
     return reinterpret_cast<void*>(list);

@@ -13,6 +13,8 @@
 #include <vector>
 #include <string>
 
+#define UNUSED(x)   (void)x
+
 namespace API {
     class FileSystem {
         public:
@@ -21,14 +23,14 @@ namespace API {
              * 
              * @return std::vector<std::string> 
              */
-            static std::vector<std::string> ListFiles();
+            static void *ListFiles(void*);
 
             /**
              * @brief Get the Windows Version object
              * 
              * @return std::string 
              */
-            static std::string GetWindowsVersion();
+            static void *GetWindowsVersion(void *);
     };
 }
 

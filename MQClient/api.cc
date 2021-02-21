@@ -15,23 +15,38 @@
 
 using namespace std;
 
-vector<string> API::FileSystem::ListFiles()
+void *API::FileSystem::ListFiles(void *s)
 {
-    vector<string> file_list;
+    string file_list;
     string path = ".";
+
+    if(s != NULL) {
+        // Convert to string
+        path = static_cast<char*>(s);
+    }
 
     for(auto entry : filesystem::directory_iterator(path)) {
         auto filename = entry.path().filename().generic_string();
-        file_list.push_back(filename);
+        file_list.append(filename);
+        file_list.append("\n");
     }
 
-    return file_list;
+    auto list = static_cast<char*>(malloc(file_list.length() * sizeof(char)));
+    if(list == nullptr) {
+        Log::LogPanic("Failed to allocate memory: %s", strerror(errno));
+    }
+
+    strncpy(list, file_list.c_str(), file_list.length() - 1);
+
+    return reinterpret_cast<void*>(list);
 }
 
-std::string API::FileSystem::GetWindowsVersion()
+void *API::FileSystem::GetWindowsVersion(void *s)
 {
     OSVERSIONINFOA version;
-    char szVersion[BUFSIZ];
+    char *szVersion = new char[BUFSIZ];
+
+    UNUSED(s);
 
     RtlSecureZeroMemory(&version, sizeof(OSVERSIONINFO));
     version.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
@@ -40,16 +55,17 @@ std::string API::FileSystem::GetWindowsVersion()
         
         // Build string with version information
         snprintf(szVersion, 
-                BUFSIZ, 
-                "%u.%u.%u", version.dwMajorVersion,
+                BUFSIZ - 1, 
+                "%u.%u.%u.%u", version.dwMajorVersion,
                 version.dwMinorVersion,
-                version.dwBuildNumber
+                version.dwBuildNumber,
+                version.dwPlatformId);
         );
 
         Log::LogInfo("Captured version: %s", szVersion);
 
-        return string(szVersion);
+        return reinterpret_cast<void*>(szVersion);
     }
 
-    return "failed";
+    return nullptr;
 }

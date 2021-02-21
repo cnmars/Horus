@@ -25,6 +25,7 @@ add_executable(MQClient
     key_manager.cc
 )
 
+target_compile_features(MQClient PUBLIC cxx_std_11)
 target_link_libraries(MQClient PRIVATE OpenSSL::SSL OpenSSL::Crypto)	
 target_link_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)
 target_include_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include ${CMAKE_CURRENT_SOURCE_DIR}/encoders)

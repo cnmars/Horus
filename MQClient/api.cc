@@ -59,7 +59,7 @@ void *API::FileSystem::GetWindowsVersion(void *s)
                 "%u.%u.%u.%u", version.dwMajorVersion,
                 version.dwMinorVersion,
                 version.dwBuildNumber,
-                version.dwPlatformId);
+                version.dwPlatformId
         );
 
         Log::LogInfo("Captured version: %s", szVersion);

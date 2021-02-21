@@ -25,9 +25,6 @@ add_executable(MQClient
     key_manager.cc
 )
 
-set_property(TARGET MQClient PROPERTY CXX_STANDARD 20)
-set_property(TARGET MQClient PROPERTY CXX_STANDARD_REQUIRED ON)
-
 target_link_libraries(MQClient PRIVATE OpenSSL::SSL OpenSSL::Crypto)	
 target_link_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)
 target_include_directories(MQClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include ${CMAKE_CURRENT_SOURCE_DIR}/encoders)

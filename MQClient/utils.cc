@@ -66,15 +66,29 @@ vector<string> Utils::Split(string s, char delim)
 {
     vector<string> v;
     string elem = "";
+    bool in_qm = false;
 
     for(auto c : s) {
-        if(c != delim) {
+        if(c == '\"') {
+            in_qm = !in_qm;
+            continue;
+        }
+
+        if(in_qm) {
             elem += c;
+            continue;
         } else {
-            v.push_back(elem);
-            elem.clear();
+            if(c != delim) {
+                elem += c;
+            } else {
+                v.push_back(elem);
+                elem.clear();
+            }
         }
     }
+
+    // Append the last element to list
+    v.push_back(elem);
 
     return v;
 }

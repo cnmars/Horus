@@ -21,8 +21,9 @@ add_executable(MQClient
     utils.cc
     wrappers.cc
     encoders/base64.cc
-    crypto.cc
     key_manager.cc
+    rsa.cc
+    aes.cc
 )
 
 target_compile_features(MQClient PUBLIC cxx_std_11)

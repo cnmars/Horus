@@ -11,6 +11,7 @@
 #define CRYPTO_HPP
 
 #include <memory>
+#include <openssl/aes.h>
 
 /**
  * @brief The default cryptographic functions namespace

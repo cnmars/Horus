@@ -18,7 +18,8 @@
 #include <cassert>
 #include <cstring>
 #include <fstream>
-#include "crypto.hpp"
+#include <windows.h>
+#include "rsa.hpp"
 #include "log.hpp"
 
 Crypto::RSACipher::RSACipher()
@@ -43,6 +44,9 @@ void *Crypto::RSACipher::LoadPublicKey(const char *buffer, size_t len)
     RSA *rsa = nullptr;
 
     fprintf(stdout, "[INFO] Loading public key:\n%s\n", buffer);
+    
+    if(this->rsa_ctx != nullptr)
+        return this->rsa_ctx;
 
     bio = BIO_new(BIO_s_mem());
     if(!bio) {

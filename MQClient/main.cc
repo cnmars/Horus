@@ -19,7 +19,8 @@
 #include "log.hpp"
 #include "utils.hpp"
 #include "network.hpp"
-#include "crypto.hpp"
+#include "rsa.hpp"
+#include "aes.hpp"
 
 using namespace std;
 
@@ -32,14 +33,21 @@ int main() {
 	unsigned QoS = 0;
 	MqttClient *client = nullptr;
 	Crypto::RSACipher *cipher = nullptr;
+	Crypto::AESCipher *aes_cipher = nullptr;
 
+	// Setup signal handler
 	signal(SIGSEGV, sigsegv_handler);
 
+	// Setup ciphers
 	cipher = new Crypto::RSACipher();
+	aes_cipher = new Crypto::AESCipher(Crypto::AES256);
 
-	if(!cipher) {
+	if(!cipher || !aes_cipher) {
 		Log::LogPanic("Failed to allocate memory for RSA Cipher object");
 	}
+
+	// Setup symetric cipher
+	aes_cipher->Setup();
 
 	// Generate MQTT client ID
 	const auto id = Utils::GenerateID();
@@ -51,8 +59,11 @@ int main() {
 
     // Configure MQTT client
     client->Setup();
+	
+	// Associate symetric cipher with mqtt client
+	client->setSymetricCipher(aes_cipher);
 
-	// Generate send and receive topic
+	// Generate topic names
 	auto heartbeat_topic = topic_name + id;
 	auto recv_topic = heartbeat_topic + "/command";
 	auto send_topic = heartbeat_topic + "/output";

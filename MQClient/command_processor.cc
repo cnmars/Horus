@@ -16,7 +16,7 @@
 #include "log.hpp"
 #include "mqtt_client.hpp"
 #include "utils.hpp"
-#include "crypto.hpp"
+#include "rsa.hpp"
 #include "encoders/base64.hpp"
 
 using namespace Crypto;

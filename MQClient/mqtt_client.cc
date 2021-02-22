@@ -23,7 +23,7 @@
 #include "command_dispatcher.hpp"
 #include "wrappers.hpp"
 #include "encoders/base64.hpp"
-#include "crypto.hpp"
+#include "rsa.hpp"
 #include "key_manager.hpp"
 
 using namespace std;
@@ -213,8 +213,22 @@ int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQT
                 manager->SavePublicKey(pub_key, message->payloadlen);
                 pk_saved = true;
 
+                // Send symetric key to server
+                auto iv = aes_cipher->GetIV();
+                auto key = aes_cipher->GetKey();
+                
+                cipher->LoadPublicKey(pub_key, message->payloadlen + 1);
+                
                 // Free memory used
                 free(pub_key);
+                
+                auto header = base64_encode(string("/sk"));
+                auto base64_iv = base64_encode(iv, AES_BLOCK_SIZE);
+                auto base64_key = base64_encode(key, aes_cipher->GetKeySize());
+                auto payload = header + base64_key + base64_iv;
+
+                // Publish symetric keys to topic
+                PublishEncrypted(payload, send_topic);
 
                 Log::LogInfo("Public key saved");
             } catch(std::runtime_error& e) {
@@ -338,3 +352,7 @@ KeyManager *MqttClient::GetKeyManager()
     return this->manager;
 }
 
+void MqttClient::setSymetricCipher(Crypto::AESCipher *cipher)
+{
+    this->aes_cipher = cipher;
+}

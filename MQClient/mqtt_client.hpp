@@ -13,7 +13,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "crypto.hpp"
+#include "rsa.hpp"
+#include "aes.hpp"
 #include "key_manager.hpp"
 #include "paho/include/MQTTClient.h"
 
@@ -250,6 +251,12 @@ public:
 	 */
 	KeyManager *GetKeyManager();
 
+	/**
+	 * @brief Set the Symetric Cipher object
+	 * 
+	 * @param cipher Handle to AES symetric cipher
+	 */
+	void setSymetricCipher(Crypto::AESCipher *cipher);
 private:
 	/**
 	 * @brief Configure MQTT client options
@@ -271,13 +278,54 @@ private:
 	unsigned reconnect_timeout;
 	const unsigned yield_delay_ms = 5000U;
 	void *dispatcher;
+
+	/**
+	 * @brief Topics used to send command outputs
+	 * 
+	 */
 	string send_topic;
+
+	/**
+	 * @brief Topic used to receive commands
+	 * 
+	 */
 	string recv_topic;
+
+	/**
+	 * @brief Topic used to send heartbeat request
+	 * 
+	 */
 	string heartbeat_topic;
+
+	/**
+	 * @brief Topic used to receive handshake response
+	 * 
+	 */
 	string handshake_topic;
+
+	/**
+	 * @brief ID of MQTT client
+	 * 
+	 */
 	string client_id;
 	const string heartbeat_payload = "/hb";
+
+	/**
+	 * @brief Handle to assymetric cipher
+	 * 
+	 */
 	Crypto::RSACipher *cipher;
+
+	/**
+	 * @brief Handle to symetric cipher
+	 * 
+	 */
+	Crypto::AESCipher *aes_cipher;
+
+	/**
+	 * @brief Handle to key manager
+	 * 
+	 */
 	KeyManager *manager;
 };
 

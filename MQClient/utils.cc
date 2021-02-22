@@ -92,3 +92,19 @@ vector<string> Utils::Split(string s, char delim)
 
     return v;
 }
+
+char *ToHex(string text)
+{
+    int size = text.length();
+    int limit = (text.length() * 2) + 1;
+    char *hexstring = (char*)malloc(sizeof(char) * limit);
+
+    // Initialize memory
+    RtlSecureZeroMemory(&hexstring, sizeof(hexstring));
+
+    for(auto i = 0, j = 0; i < size; i++, j += 2) {
+        snprintf(&hexstring[j], 3, "%.2x", text[i]);
+    }
+
+    return hexstring;
+}

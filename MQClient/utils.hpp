@@ -57,6 +57,14 @@ public:
 	 * @param delim Delimiter
 	 */
 	static vector<string> Split(string s, char delim);
+
+	/**
+	 * @brief Convert a string to hexadecimal
+	 * 
+	 * @param text 
+	 * @return char* 
+	 */
+	static char *ToHex(string text);
 };
 
 #endif

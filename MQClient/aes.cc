@@ -147,5 +147,5 @@ unsigned char *Crypto::AESCipher::GetKey()
 
 unsigned int Crypto::AESCipher::GetKeySize()
 {
-    this->keySize;
+    return this->keySize;
 }

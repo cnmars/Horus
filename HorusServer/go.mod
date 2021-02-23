@@ -1,4 +1,4 @@
-module MQServer
+module HorusServer
 
 go 1.15
 

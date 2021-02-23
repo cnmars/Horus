@@ -1,0 +1,33 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(HorusClient)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+find_package(OpenSSL REQUIRED)
+
+add_executable(HorusClient
+    api.cc
+    command_dispatcher.cc
+    command_processor.cc
+    fs.cc
+    log.cc
+    main.cc
+    mqtt_client.cc
+    network.cc
+    tcp_client.cc
+    utils.cc
+    wrappers.cc
+    encoders/base64.cc
+    key_manager.cc
+    rsa.cc
+    aes.cc
+)
+
+target_compile_features(HorusClient PUBLIC cxx_std_17)
+target_link_libraries(HorusClient PRIVATE OpenSSL::SSL OpenSSL::Crypto)	
+target_link_directories(HorusClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/lib)
+target_include_directories(HorusClient PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/paho/include ${CMAKE_CURRENT_SOURCE_DIR}/encoders)
+target_link_libraries(HorusClient PRIVATE wininet ws2_32 urlmon paho-mqtt3c rpcrt4 stdc++fs)

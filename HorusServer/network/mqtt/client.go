@@ -1,10 +1,10 @@
 package mqtt
 
 import (
-	"MQServer/controller"
-	memoryDatabase "MQServer/database"
-	"MQServer/model"
-	"MQServer/utils"
+	"HorusServer/controller"
+	memoryDatabase "HorusServer/database"
+	"HorusServer/model"
+	"HorusServer/utils"
 	"fmt"
 	"log"
 

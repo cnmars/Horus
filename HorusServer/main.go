@@ -1,11 +1,11 @@
 package main
 
 import (
-	"MQServer/cipher"
-	"MQServer/controller"
-	"MQServer/database"
-	"MQServer/network/mqtt"
-	"MQServer/utils"
+	"HorusServer/cipher"
+	"HorusServer/controller"
+	"HorusServer/database"
+	"HorusServer/network/mqtt"
+	"HorusServer/utils"
 )
 
 func main() {

@@ -29,7 +29,7 @@ void sigsegv_handler(int s) {
 }
 
 int main() {
-	string topic_name = "mqrat/cmd/";
+	string topic_name = "horus/cmd/";
 	unsigned QoS = 0;
 	MqttClient *client = nullptr;
 	Crypto::RSACipher *cipher = nullptr;

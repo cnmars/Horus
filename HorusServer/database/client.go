@@ -1,7 +1,7 @@
 package database
 
 import (
-	"MQServer/model"
+	"HorusServer/model"
 	"fmt"
 
 	"github.com/google/uuid"

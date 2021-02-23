@@ -1,8 +1,8 @@
 package mqtt
 
 import (
-	"MQServer/cipher"
-	"MQServer/model"
+	"HorusServer/cipher"
+	"HorusServer/model"
 	"log"
 )
 

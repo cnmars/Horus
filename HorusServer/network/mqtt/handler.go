@@ -1,10 +1,10 @@
 package mqtt
 
 import (
-	"MQServer/cipher"
-	"MQServer/controller"
-	memoryDatabase "MQServer/database"
-	"MQServer/model"
+	"HorusServer/cipher"
+	"HorusServer/controller"
+	memoryDatabase "HorusServer/database"
+	"HorusServer/model"
 	"crypto/aes"
 	"encoding/base64"
 

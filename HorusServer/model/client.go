@@ -75,7 +75,7 @@ var (
 var (
 	// ClientTopics contains the names of all predefined topics
 	ClientTopics = []ClientTopic{
-		{ID: TopicIDBase, Name: "mqrat/cmd"},
+		{ID: TopicIDBase, Name: "horus/cmd"},
 		{ID: TopicIDOut, Name: "output"},
 		{ID: TopicIDCmd, Name: "command"},
 		{ID: TopicIDHs, Name: "hs"},

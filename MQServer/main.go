@@ -2,7 +2,9 @@ package main
 
 import (
 	"MQServer/cipher"
-	MQTT "MQServer/network/mqtt"
+	"MQServer/controller"
+	"MQServer/database"
+	"MQServer/network/mqtt"
 	"MQServer/utils"
 )
 
@@ -23,8 +25,11 @@ func start() {
 	// Precompute some values
 	cipher.EncryptionKeys.Private.Precompute()
 
+	// Starts the in-memory database
+	database.Initialize(30)
+
 	// Start MQTT client
-	MQTT.Start(qosLevel)
+	mqtt.Start(qosLevel)
 
 	// Configure logging
 	f := utils.SetupLogSystem()
@@ -33,10 +38,10 @@ func start() {
 	defer f.Close()
 
 	// Read commands from standard input
-	MQTT.Loop()
+	controller.ReadCommands()
 }
 
 func stop() {
 	// Stop MQTT client
-	MQTT.Stop()
+	mqtt.Stop()
 }

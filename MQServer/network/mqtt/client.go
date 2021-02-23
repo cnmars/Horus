@@ -1,6 +1,9 @@
-package network
+package mqtt
 
 import (
+	"MQServer/controller"
+	memoryDatabase "MQServer/database"
+	"MQServer/model"
 	"MQServer/utils"
 	"fmt"
 	"log"
@@ -10,17 +13,6 @@ import (
 
 // brokerHostname constains DNS name of mqtt broker
 const brokerHostname string = "broker.hivemq.com:1883"
-
-const baseTopic string = "mqrat/cmd"
-
-// outputTopic contains the name of subtopic used to receive command responses
-const outputTopic string = "output"
-
-// cmdTopic name of subtopic used to send commands
-const cmdTopic string = "command"
-
-// handshakeTopic topic used to send public key to clients
-const handshakeTopic string = "hs"
 
 // client is a handle to mqtt client
 var client MQTT.Client
@@ -48,12 +40,18 @@ func Start(QoS byte) {
 	token := client.Connect()
 	waitForToken(token)
 
+	// Gets the name of base topic
+	baseTopic := model.GetTopicNameByID(model.TopicIDBase)
+
 	// Make subscriptions
 	token = client.Subscribe(fmt.Sprintf("%v/+/+", baseTopic), QoS, onMessageReceived)
 	waitForToken(token)
 
 	token = client.Subscribe(fmt.Sprintf("%v/+", baseTopic), QoS, onHeartbeatReceived)
 	waitForToken(token)
+
+	// Trigger the command sender
+	go sendCommands()
 }
 
 // Stop function stops the MQTT client
@@ -68,9 +66,30 @@ func waitForToken(token MQTT.Token) {
 }
 
 func onMessageReceived(client MQTT.Client, message MQTT.Message) {
-	go translateMessage(client, message)
+	go handleMessage(client, message)
 }
 
 func onHeartbeatReceived(client MQTT.Client, message MQTT.Message) {
-	go translateMessage(client, message)
+	go handleMessage(client, message)
+}
+
+func sendCommands() {
+	for {
+		select {
+		case cmd := <-controller.Commands:
+
+			// Dispatch the new command to all connected clients
+			allClients := memoryDatabase.GetAllClients()
+
+			for _, cl := range allClients {
+				// Ignore deleted clients
+				if !cl.Deleted {
+					fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
+					client.Publish(cl.CmdTopic, qosLevel, false, cmd)
+				}
+			}
+
+			break
+		}
+	}
 }

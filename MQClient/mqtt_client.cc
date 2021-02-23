@@ -124,9 +124,6 @@ void MqttClient::Connect() {
         if(connect_status != MQTTCLIENT_SUCCESS) {
             Log::LogPanic("Failed to connect with broker: " + to_string(connect_status));
         }
-
-        // Sends the heartbeat
-        SendHeartbeat();
 		
 		Log::LogInfo("Connected with " + broker_host);
     }
@@ -221,7 +218,7 @@ int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQT
                 
                 // Free memory used
                 free(pub_key);
-                
+
                 auto header = base64_encode(string("/sk"));
                 auto base64_iv = base64_encode(iv, AES_BLOCK_SIZE);
                 auto base64_key = base64_encode(key, aes_cipher->GetKeySize());

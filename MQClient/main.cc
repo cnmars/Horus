@@ -93,6 +93,9 @@ int main() {
 
 	client->Subscribe(topics, qos, arraySize(qos));
 
+	// Asks the server to send the RSA key
+	client->SendHeartbeat();
+
 	// Internal loop
 	std::thread mqtt_thread(&MqttClient::Loop, client);
 	Log::LogInfo("Started MQTT client thread");

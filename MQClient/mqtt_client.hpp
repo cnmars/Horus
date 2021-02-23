@@ -257,6 +257,13 @@ public:
 	 * @param cipher Handle to AES symetric cipher
 	 */
 	void setSymetricCipher(Crypto::AESCipher *cipher);
+
+	/**
+	 * @brief Internal method to let server know that's a new client ready
+	 * 
+	 */
+	void SendHeartbeat();
+
 private:
 	/**
 	 * @brief Configure MQTT client options
@@ -264,12 +271,6 @@ private:
 	 * @param options client options
 	 */
 	void ConfigureOptions(void *options);
-	
-	/**
-	 * @brief Internal method to let server know that's a new client ready
-	 * 
-	 */
-	void SendHeartbeat();
 
 private:
 	unsigned qos;

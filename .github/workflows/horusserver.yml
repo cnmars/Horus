@@ -1,4 +1,4 @@
-name: MQServer Build
+name: Server
 
 on: push
 

@@ -24,6 +24,7 @@ CommandDispatcher::CommandDispatcher()
 {
     this->message = nullptr;
     this->client = nullptr;
+    this->cp = nullptr;
 }
 
 CommandDispatcher::CommandDispatcher(MQTTClient_message *msg, MqttClient *client, char *topic)
@@ -31,6 +32,7 @@ CommandDispatcher::CommandDispatcher(MQTTClient_message *msg, MqttClient *client
     this->message = msg;
     this->client = client;
     this->topic = topic;
+    this->cp = new CommandProcessor("", client);
 }
 
 void CommandDispatcher::setMessage(MQTTClient_message *new_msg)
@@ -60,11 +62,13 @@ void CommandDispatcher::Dispatch()
 
     // Setup command processor
     auto cmd = static_cast<char*>(message->payload);
-    auto cp = new CommandProcessor(cmd, client);
+    this->cp->setCommand(cmd);
 
     // Analyse command syntax
     cp->Process();
+}
 
-    if(cp)
-        delete cp;
+void CommandDispatcher::Prepare()
+{
+    cp->Setup();
 }

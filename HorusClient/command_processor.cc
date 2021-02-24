@@ -28,28 +28,38 @@ static struct Command valid_commands[] = {
     { "list-files", API::FileSystem::ListFiles }
 };
 
-CommandProcessor::CommandProcessor(string cmd, void *client)
+CommandProcessor::CommandProcessor(string cmd, MqttClient *client)
 {
     this->command = cmd;
     this->client = client;
     this->public_key_len = 0;
 }
 
+void CommandProcessor::Setup()
+{
+    auto client = static_cast<MqttClient*>(this->client);
+
+    // Load public key from disk
+    this->public_key = client->GetKeyManager()->ReadPublicKey();
+
+    // Load public key into memory (prepare RSA context)
+    client->getCipher()->LoadPublicKey(this->public_key.c_str(), this->public_key.length());
+}
+
+
+void CommandProcessor::setCommand(string cmd)
+{
+    if(!cmd.empty()) {
+        this->command = cmd;
+    }
+}
+
 void CommandProcessor::Process()
 {
-    RSA *rsa = nullptr;
-    auto client = static_cast<MqttClient*>(this->client);
     auto send_topic = client->getSendTopic();
-    auto cipher = client->getCipher();
 
     try 
     {
-        // Load public key from disk
-        this->public_key = client->GetKeyManager()->ReadPublicKey();
-
-        // Load public key into memory
-        rsa = (RSA*)cipher->LoadPublicKey(this->public_key.c_str(), this->public_key.length());
-
         // Checks if command has some parameter
         string parameter = "";
         auto v = Utils::Split(command, ' ');
@@ -59,9 +69,9 @@ void CommandProcessor::Process()
         if(has_parameter) {
             parameter = v[1];
             command = v[0];
-        }
 
-        Log::LogInfo("Parameter: %s", parameter.c_str());
+            Log::LogInfo("Parameter: %s", parameter.c_str());
+        }
 
         // Check if command is a valid command
         for(auto cmd : valid_commands) 
@@ -103,9 +113,4 @@ void CommandProcessor::Process()
 
 free_resources:
     Log::LogInfo("Releasing resources");
-
-    if(rsa != nullptr) {
-        // Free resources
-        RSA_free(rsa);
-    }
 }

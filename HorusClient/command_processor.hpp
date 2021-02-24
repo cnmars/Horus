@@ -12,6 +12,7 @@
 
 #include <string>
 #include <functional>
+#include "mqtt_client.hpp"
 
 using namespace std;
 
@@ -27,13 +28,26 @@ class CommandProcessor {
 		 * @param cmd Command
 		 * @param client Pointer to MQTTClient
 		 */
-		explicit CommandProcessor(string cmd, void *client);
+		explicit CommandProcessor(string cmd, MqttClient *client);
+
+		/**
+		 * @brief Setup the command processor
+		 * 
+		 */
+		void Setup();
 
 		/**
 		 * @brief Process the specified command
 		 * 
 		 */
 		void Process();
+
+		/**
+		 * @brief Set the Command object
+		 * 
+		 * @param cmd 
+		 */
+		void setCommand(string cmd);
 	private:
 		/**
 		 * @brief Command to be executed
@@ -57,7 +71,7 @@ class CommandProcessor {
 		 * @brief Pointer to MQTT client
 		 * 
 		 */
-		void *client;
+		MqttClient *client;
 };
 
 struct Command {

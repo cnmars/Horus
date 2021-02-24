@@ -25,14 +25,14 @@ func start() {
 	// Precompute some values
 	cipher.EncryptionKeys.Private.Precompute()
 
+	// Configure logging
+	f := utils.SetupLogSystem()
+
 	// Starts the in-memory database
 	database.Initialize(30)
 
 	// Start MQTT client
 	mqtt.Start(qosLevel)
-
-	// Configure logging
-	f := utils.SetupLogSystem()
 
 	// Ensure that log file will be closed
 	defer f.Close()

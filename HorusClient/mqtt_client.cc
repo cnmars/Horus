@@ -69,13 +69,13 @@ bool MqttClient::Setup() {
     // Create MQTT client
     auto status = MQTTClient_create(&client, this->broker_host.c_str(), client_id.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
     if(status != MQTTCLIENT_SUCCESS) {
-        Log::LogPanic("Failed to create MQTT client: " + to_string(status));
+        Log::LogPanic("Failed to create MQTT client: %s", MQTTClient_strerror(status));
     }
 
     // Configure callbacks
     auto c = MQTTClient_setCallbacks(client, this, Wrappers::onLost, Wrappers::onMsgReceived, Wrappers::onDelivered);
     if(c != MQTTCLIENT_SUCCESS) {
-        Log::LogPanic("Failed to setup callbacks: " + to_string(c));
+        Log::LogPanic("Failed to setup callbacks: %s", MQTTClient_strerror(c));
     }
 
     return true;
@@ -87,7 +87,7 @@ void MqttClient::Subscribe(string topic) {
 
 	Log::LogInfo("Subscribing to topic: " + topic);
 	if((status = MQTTClient_subscribe(client, topic.c_str(), this->qos)) != MQTTCLIENT_SUCCESS) {
-		Log::LogPanic("Failed to subscribe: " + to_string(status));
+		Log::LogPanic("Failed to subscribe: %s", MQTTClient_strerror(status));
 	}
 }
 
@@ -96,9 +96,8 @@ void MqttClient::Subscribe(char* const* topics, int *qos, int len) {
     auto status = MQTTClient_subscribeMany(client, len, topics, qos);
 
     if(status != MQTTCLIENT_SUCCESS) {
-        Log::LogPanic("Failed to subscribe to multiple topics: " + to_string(status));
+        Log::LogPanic("Failed to subscribe to multiple topics: %s", MQTTClient_strerror(status));
     }
-
 }
 
 void MqttClient::ConfigureOptions(void *m_options) {
@@ -116,7 +115,7 @@ void MqttClient::Connect() {
         this->ConfigureOptions(&options);
 		auto connect_status = MQTTClient_connect(client, &options);
         if(connect_status != MQTTCLIENT_SUCCESS) {
-            Log::LogPanic("Failed to connect with broker: " + to_string(connect_status));
+            Log::LogPanic("Failed to connect with broker: %s", MQTTClient_strerror(connect_status));
         }
 		
 		Log::LogInfo("Connected with " + broker_host);
@@ -146,7 +145,7 @@ void MqttClient::Publish(string data, string topic, unsigned QoS, bool retained)
 	// Wait for message delivery
 	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
     if(status != MQTTCLIENT_SUCCESS) {
-        Log::LogError("Failed to publish data: %d", status);
+        Log::LogError("Failed to publish data: %s", MQTTClient_strerror(status));
         return;
     }
 

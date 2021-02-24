@@ -65,6 +65,13 @@ public:
 	 * @return char* 
 	 */
 	static char *ToHex(string text);
+
+	/**
+	 * @brief Restarts the current application
+	 * 
+	 * @param timeout_secs Timeout in seconds
+	 */
+	static void RestartCurrentApplication(unsigned timeout_secs);
 };
 
 #endif

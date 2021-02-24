@@ -8,6 +8,7 @@
 */
 
 #include <windows.h>
+#include <fstream>
 #include "utils.hpp"
 #include "log.hpp"
 
@@ -107,4 +108,39 @@ char *ToHex(string text)
     }
 
     return hexstring;
+}
+
+void Utils::RestartCurrentApplication(unsigned timeout_secs)
+{
+    char path[MAX_PATH];
+
+    // Get full path for the current application
+    if(GetModuleFileNameA(GetModuleHandleA(NULL), path, MAX_PATH) > 0) {
+
+        Log::LogInfo("Restarting application %s", path);
+
+        auto ScheduleRestart = [&]() -> void
+        {
+            char cmdline[MAX_PATH * 2];
+
+            snprintf(cmdline, ARRAYSIZE(cmdline), "cmd /c \"waitfor a /t %u & \"%s\"\"", 
+                        timeout_secs, 
+                        path);
+
+            // Save command line to file
+            auto filename = "restart.bat";
+            ofstream batch(filename, std::ios_base::out);
+            batch << string(cmdline);
+            batch.close();
+
+            // Run script
+            ShellExecuteA(0, "open", filename, 0, 0, SW_SHOW);
+        };
+
+        // Schedule restart of current application
+        ScheduleRestart();
+
+        // Exits the current process
+        ExitProcess(0);
+    }
 }

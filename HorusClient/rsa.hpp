@@ -11,6 +11,7 @@
 #define CRYPTO_HPP
 
 #include <memory>
+#include <openssl/rsa.h>
 #include <openssl/aes.h>
 
 /**
@@ -43,9 +44,8 @@ namespace Crypto
              * 
              * @param buffer Buffer containing the base64 public key in PEM format
              * @param len Buffer size
-             * @return void* Pointer to RSA struct
              */
-            void *LoadPublicKey(const char *buffer, size_t len);
+            void LoadPublicKey(const char *buffer, size_t len);
 
             /**
              * @brief Encrypts the specified block of data
@@ -61,9 +61,15 @@ namespace Crypto
              * 
              * @return void* 
              */
-            void *GetRSAContext();
+            RSA *GetRSAContext();
+
+            /**
+             * @brief 
+             * 
+             */
+            void ReleaseCipher();
         private:
-            void *rsa_ctx;
+            RSA *rsa_ctx;
     };
 }
 

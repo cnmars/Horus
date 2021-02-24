@@ -27,6 +27,8 @@ Crypto::RSACipher::RSACipher()
     ERR_load_crypto_strings();
     ERR_free_strings();
 
+    Log::LogInfo("Setting up RSA Cipher ...");
+
     rsa_ctx = nullptr;
 }
 
@@ -35,34 +37,39 @@ Crypto::RSACipher::~RSACipher()
 #ifdef TEST
     printf("Destroying RSACipher object\n");
 #endif
-    RSA_free(static_cast<RSA*>(this->rsa_ctx));
+    
+    if(rsa_ctx != nullptr) {
+        RSA_free(rsa_ctx);
+    }
 }
 
-void *Crypto::RSACipher::LoadPublicKey(const char *buffer, size_t len)
+void Crypto::RSACipher::LoadPublicKey(const char *buffer, size_t len)
 {
     BIO *bio = nullptr;
     RSA *rsa = nullptr;
 
-    fprintf(stdout, "[INFO] Loading public key:\n%s\n", buffer);
-    
-    if(this->rsa_ctx != nullptr)
-        return this->rsa_ctx;
+    if(this->rsa_ctx != nullptr) {
+        Log::LogInfo("Public key already loaded into memory");
+        return;
+    }
+
+    Log::LogInfo("[INFO] Loading public key (%u bytes)", len);
 
     bio = BIO_new(BIO_s_mem());
     if(!bio) {
-        throw std::runtime_error("Failed to initialize BIO memory buffer");
+        throw std::runtime_error("cannot initialize BIO memory buffer");
     }
 
     if(!(BIO_write(bio, buffer, len) > 0)) {
         BIO_free(bio);
-        throw std::runtime_error("BIO_write failed");
+        throw std::runtime_error("cannot write data to BIO memory");
     }
 
     rsa = PEM_read_bio_RSA_PUBKEY(bio, &rsa, NULL, NULL);
     if(!rsa) {
         ERR_print_errors_fp(stdout);
         BIO_free(bio);
-        throw std::runtime_error("Failed to read bio pubkey");
+        throw std::runtime_error("cannot read PEM encoded public key");
     }
 
     // Setup RSA context variable
@@ -70,13 +77,11 @@ void *Crypto::RSACipher::LoadPublicKey(const char *buffer, size_t len)
 
     // Free resources
     BIO_free(bio);
-
-    return rsa;
 }
 
 char *Crypto::RSACipher::Encrypt(const char *buffer, size_t len)
 {
-    std::string s_encryptedBuffer;
+    std::string encodedBuffer;
     unsigned char *encryptedBuffer;
 
     // Make sure that public key is loaded
@@ -110,30 +115,44 @@ char *Crypto::RSACipher::Encrypt(const char *buffer, size_t len)
     // Check for error
     if(encrypted_size > 0) {
         // Encode encrypted data to base64
-        s_encryptedBuffer = base64_encode(encryptedBuffer, encrypted_size);
+        encodedBuffer = base64_encode(encryptedBuffer, encrypted_size);
     } else {
         auto err = ERR_error_string(ERR_get_error(), nullptr);
         throw std::runtime_error(std::string(err));
     }
 
-    Log::LogInfo("Encryption done: " + to_string(encrypted_size) + " bytes encrypted");
+    Log::LogInfo("Encryption done: %u bytes encrypted", encrypted_size);
 
     // Free used memory
     delete[] encryptedBuffer;
 
     // Allocate memory to store encrypted buffer
-    char *s = (char*)malloc(s_encryptedBuffer.length() + 1);
+    auto encrypted_buffer_size = encodedBuffer.length() * sizeof(char);
+    auto s = new char[encrypted_buffer_size];
     if(!s) {
         Log::LogPanic("Failed to allocate memory: %s\n", strerror(errno));
     }
 
-    // Copy encrypted string to buffer
-    strncpy(s, s_encryptedBuffer.c_str(), s_encryptedBuffer.length());
+    Log::LogInfo("%u bytes of memory allocated to encrypted string", encrypted_buffer_size);
+
+    // Initialize memory
+    RtlSecureZeroMemory(s, encrypted_buffer_size);
+
+    // Copy encrypted string to buffer and check for error
+    if(strncpy(s, encodedBuffer.c_str(), encrypted_buffer_size) == nullptr) {
+        Log::LogPanic("Uncontained runtime error");
+    }
 
     return s;
 }
 
-void *Crypto::RSACipher::GetRSAContext()
+RSA *Crypto::RSACipher::GetRSAContext()
 {
     return this->rsa_ctx;
+}
+
+void Crypto::RSACipher::ReleaseCipher()
+{
+    RSA_free(this->rsa_ctx);
+    rsa_ctx = nullptr;
 }

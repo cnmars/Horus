@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"HorusServer/controller"
 	"HorusServer/database"
 	"HorusServer/model"
 	"log"
@@ -17,8 +16,8 @@ func dispatchMessage(msg *TranslatedMessage) {
 		return
 	}
 
-	if msg.TopicName == client.HandshakeTopic {
-		// Just ignore handshake message
+	if msg.TopicName == client.HandshakeTopic || msg.TopicName == client.CmdTopic {
+		// Just ignore echoed messages
 		return
 	}
 
@@ -38,13 +37,13 @@ func dispatchMessage(msg *TranslatedMessage) {
 		if decodeFail != nil {
 			// Payload is not base64 encoded. Just show it on screen
 			output.Printf("[ERROR] Failed to decode payload: %v", decodeFail)
-			showClientResponse(msg.Payload, client.ID, client.Logger)
+			showClientResponse(msg.Payload, client.Logger)
 		} else {
 			// Decrypt response
 			decryptedData, decryptErr := decryptPayload(decodedPayload)
 			if decryptErr != nil {
 				output.Printf("[ERROR] Failed to decrypt payload: %v", decryptErr)
-				controller.CommandProcessed <- true
+				output.Printf("[INFO] Encrypted payload: %v", decodedPayload)
 				return
 			}
 
@@ -54,8 +53,6 @@ func dispatchMessage(msg *TranslatedMessage) {
 	} else {
 		output.Printf("[ERROR] Invalid subtopic detected: %v", msg.Subtopic)
 	}
-
-	controller.CommandProcessed <- true
 }
 
 func isHandshakeRequest(msg string) bool {
@@ -64,6 +61,6 @@ func isHandshakeRequest(msg string) bool {
 	return requestName == msg
 }
 
-func showClientResponse(msg, clientID string, logger *log.Logger) {
-	logger.Printf("Response from %v: %v", clientID, msg)
+func showClientResponse(msg string, logger *log.Logger) {
+	logger.Printf("Response: %v", msg)
 }

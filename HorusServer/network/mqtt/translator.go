@@ -45,5 +45,7 @@ func translateMessage(client MQTT.Client, message MQTT.Message) (translated *Tra
 	translated.TopicName = topic
 	translated.Subtopic = levels[levelCount-1]
 
+	log.Printf("[INFO] %v bytes received from %v", len(payload), clientID)
+
 	return
 }

@@ -7,6 +7,7 @@ import (
 	"HorusServer/model"
 	"crypto/aes"
 	"encoding/base64"
+	"log"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -28,8 +29,14 @@ func decodePayload(payload string) (decodedPayload []byte, err error) {
 	// Calculates max length of decoded payload
 	maxLength := base64.RawStdEncoding.DecodedLen(len(payload))
 
+	log.Printf("[INFO] Maximum size of decoded data: %v bytes for %v", maxLength, len(payload))
+
 	// Allocate memory to store decoded data
-	var dest []byte = make([]byte, maxLength-1)
+	var dest []byte = make([]byte, maxLength)
+
+	for s := range dest {
+		dest[s] = 0
+	}
 
 	// Decode
 	_, err = base64.RawStdEncoding.Decode(dest, []byte(payload))
@@ -50,6 +57,7 @@ func handleDecryptedPayload(payload string, client *model.Client) {
 		payloadBytes := []byte(payload)
 
 		header := payload[:3]
+		log.Printf("header: %v", header)
 		if header == "/sk" {
 
 			// Validate payload size

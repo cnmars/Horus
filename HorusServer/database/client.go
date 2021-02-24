@@ -3,24 +3,24 @@ package database
 import (
 	"HorusServer/model"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 )
 
 // Clients map contains all information about a client
-var clients []model.Client
+var clients map[string]model.Client
 var newClients chan model.Client
-var insertCompleted = make(chan bool, 1)
 
 // Initialize function starts the in memory database
 func Initialize(maxClients int) {
-	clients = make([]model.Client, maxClients)
 	newClients = make(chan model.Client, maxClients)
-
-	insertCompleted <- false
+	clients = make(map[string]model.Client)
 
 	// Use a goroutine to register new clients
 	go handleNewClients()
+
+	log.Printf("[INFO] Memory database started")
 }
 
 // RegisterClient registers a client in database
@@ -56,10 +56,13 @@ func handleNewClients() {
 	for {
 		select {
 		case newClient := <-newClients:
-			<-insertCompleted
-			clients = append(clients, newClient)
-			insertCompleted <- true
-			newClient.Logger.Printf("New client registered: %v", newClient.ID)
+			// Insert new client to database
+			_, found := clients[newClient.ID]
+			if !found {
+				clients[newClient.ID] = newClient
+			}
+
+			log.Printf("New client registered: %v", newClient.ID)
 			break
 		}
 	}
@@ -114,11 +117,9 @@ func DeleteClient(clientID string) (err error) {
 // FindClientbyID finds the specified client in database
 // if err is nil, then the client could be found on database
 func FindClientbyID(clientID string) (c *model.Client, err error) {
-	for _, client := range clients {
-		if client.ID == clientID {
-			c = &client
-			return c, nil
-		}
+	cl, found := clients[clientID]
+	if found {
+		return &cl, nil
 	}
 
 	return nil, fmt.Errorf("Client not found in database: %v", clientID)
@@ -126,5 +127,11 @@ func FindClientbyID(clientID string) (c *model.Client, err error) {
 
 // GetAllClients returns all registered clients
 func GetAllClients() []model.Client {
-	return clients
+	var allClients []model.Client
+
+	for _, cl := range clients {
+		allClients = append(allClients, cl)
+	}
+
+	return allClients
 }

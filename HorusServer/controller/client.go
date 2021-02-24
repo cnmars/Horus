@@ -9,8 +9,8 @@ import (
 // Commands stores all command pending
 var Commands chan string
 
-// CommandProcessed channel is updated whenever a command is sent to client
-var CommandProcessed = make(chan bool, 1)
+// CommandSent channel is updated whenever a command is sent to client
+var CommandSent = make(chan bool, 1)
 
 // ClientConnected is updated whenever a client connects to server
 var ClientConnected = make(chan bool, 1)
@@ -26,7 +26,7 @@ func ReadCommands() {
 	setupCommander()
 
 	// Wait some client to be connected
-	fmt.Println("Waiting for clients ...")
+	fmt.Println("[INFO] Waiting for clients ...")
 
 	<-ClientConnected
 
@@ -46,7 +46,9 @@ func ReadCommands() {
 		// Insert command to channel
 		Commands <- command
 
-		// Wait for command to be processed
-		<-CommandProcessed
+		fmt.Println("[INFO] Waiting command to be sent for all clients ...")
+
+		// Wait for command to be sent for all clients
+		<-CommandSent
 	}
 }

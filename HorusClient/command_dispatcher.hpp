@@ -1,7 +1,7 @@
 /*
-	This file is part of MQRat.
+	This file is part of Horus.
 	
-	Copyright (C) 2019  MQRat Project
+	Copyright (C) 2021  Horus Project
 
 	O autor não se responsabiliza por variantes (ou sources originais) deste software 
 	que estejam sendo utilizadas para prejudicar terceiros.

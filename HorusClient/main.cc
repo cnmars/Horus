@@ -29,7 +29,6 @@ void sigsegv_handler(int s) {
 }
 
 int main() {
-	string topic_name = "horus/cmd/";
 	unsigned QoS = 0;
 	MqttClient *client = nullptr;
 	Crypto::RSACipher *cipher = nullptr;
@@ -39,8 +38,12 @@ int main() {
 	signal(SIGSEGV, sigsegv_handler);
 
 	// Setup ciphers
-	cipher = new Crypto::RSACipher();
-	aes_cipher = new Crypto::AESCipher(Crypto::AES256);
+	try {
+		cipher = new Crypto::RSACipher();
+		aes_cipher = new Crypto::AESCipher(Crypto::AES256);
+	} catch(std::bad_alloc& ba) {
+		Log::LogPanic("Failed to allocate memory: %s", ba.what());
+	}
 
 	if(!cipher || !aes_cipher) {
 		Log::LogPanic("Failed to allocate memory for RSA Cipher object");
@@ -64,10 +67,10 @@ int main() {
 	client->setSymetricCipher(aes_cipher);
 
 	// Generate topic names
-	auto heartbeat_topic = topic_name + id;
-	auto recv_topic = heartbeat_topic + "/command";
-	auto send_topic = heartbeat_topic + "/output";
-	auto handshake_topic = heartbeat_topic + "/hs";
+	auto heartbeat_topic = topics[MQTT_TOPIC_BASE].Name + "/" + id;
+	auto recv_topic = heartbeat_topic + "/" + topics[MQTT_TOPIC_INPUT].Name;
+	auto send_topic = heartbeat_topic + "/" + topics[MQTT_TOPIC_OUTPUT].Name;
+	auto handshake_topic = heartbeat_topic + "/" + topics[MQTT_TOPIC_HANDSHAKE].Name;
 
 	client->setRecvTopic(recv_topic);
 	client->setSendTopic(send_topic);
@@ -95,6 +98,10 @@ int main() {
 
 	// Asks the server to send the RSA key
 	client->SendHeartbeat();
+
+	// Wait heartbeat to be responded
+	std::thread hb_check_thread(&MqttClient::CheckHandshake, client);
+	hb_check_thread.join();
 
 	// Internal loop
 	std::thread mqtt_thread(&MqttClient::Loop, client);

@@ -27,35 +27,29 @@
 #include "key_manager.hpp"
 
 using namespace std;
-static std::atomic<bool> pk_saved = false;
 
 MqttClient::MqttClient() {
 	this->qos = 0;
     this->client = nullptr;
     this->broker_host = "127.0.0.1";
     this->reconnect_timeout = 5000;
-    dispatcher = new CommandDispatcher(nullptr, this, nullptr);
-    manager = new KeyManager();
-}
-
-MqttClient::MqttClient(unsigned qos_level, string broker_hostname) {
-	this->qos = qos_level;
-    this->client = nullptr;
-    this->broker_host = broker_hostname;
-    this->reconnect_timeout = 5000;
-    dispatcher = new CommandDispatcher(nullptr, this, nullptr);
-    manager = new KeyManager();
     this->client_id = Utils::GenerateID();
-}
-
-MqttClient::MqttClient(unsigned qos_level, string broker_hostname, Crypto::RSACipher *cipher, string id) {
-	this->qos = qos_level;
-    this->client = nullptr;
-    this->broker_host = broker_hostname;
-    this->reconnect_timeout = 5000;
-    this->cipher = cipher;
     dispatcher = new CommandDispatcher(nullptr, this, nullptr);
     manager = new KeyManager();
+
+    this->bPublicKeySaved.store(false);
+    this->bHeartbeatReceived.store(false);
+}
+
+MqttClient::MqttClient(unsigned qos_level, string broker_hostname) : MqttClient() {
+	this->qos = qos_level;
+    this->broker_host = broker_hostname;
+}
+
+MqttClient::MqttClient(unsigned qos_level, string broker_hostname, Crypto::RSACipher *cipher, string id) : MqttClient() {
+	this->qos = qos_level;
+    this->broker_host = broker_hostname;
+    this->cipher = cipher;
     this->client_id = id;
 }
 
@@ -148,13 +142,11 @@ void MqttClient::Publish(string data, string topic, unsigned QoS, bool retained)
 	// Publishes the message
 	MQTTClient_publish(client, topic.c_str(), data.length(), 
                     reinterpret_cast<const void*>(data.c_str()), QoS, retained, &token);
-    
-    Log::LogInfo("Waiting message to be published");
 
 	// Wait for message delivery
 	auto status = MQTTClient_waitForCompletion(client, token, delivery_timeout);	
     if(status != MQTTCLIENT_SUCCESS) {
-        Log::LogError("Failed to publish data: " + status);
+        Log::LogError("Failed to publish data: %d", status);
         return;
     }
 
@@ -187,6 +179,34 @@ void MqttClient::OnConnectionLost(void *context, char *cause) {
     this->Connect();
 }
 
+void MqttClient::SaveRSAPk(MQTTClient_message *message)
+{
+    // Allocate memory to store payload
+    auto needed_memory = (message->payloadlen + 1) * sizeof(char);
+    auto pub_key = new char[needed_memory];
+
+    // Write public key to buffer
+    auto pub_key_len = snprintf(pub_key, needed_memory, "%s", (char*)message->payload);
+
+    if(pub_key_len <= 0) {
+        throw std::runtime_error("snprintf could not write data to buffer");
+    }
+
+    // Save public key
+    manager->SavePublicKey(pub_key, needed_memory);
+    bPublicKeySaved.store(true);
+
+    Log::LogInfo("Public key saved");
+
+    // Setup RSA Context
+    cipher->LoadPublicKey(pub_key, pub_key_len);
+
+    // Free memory used
+    delete[] pub_key;
+
+    static_cast<CommandDispatcher*>(dispatcher)->Prepare();
+}
+
 int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQTTClient_message *message) {
     
     if(IsBadReadPtr(topic, sizeof(topic))) {
@@ -196,45 +216,14 @@ int MqttClient::OnMessageReceived(void *context, char *topic, int topic_len, MQT
     Log::LogInfo("Message received on topic " + string(topic));
 
     // Check if is the handshake message
-    if(string(topic).find("/hs") != string::npos) {
-        // Save public key into disk
-        if(!pk_saved) {
-            try {
+    auto hs_topic = "/" + topics[MQTT_TOPIC_HANDSHAKE].Name;
 
-                // Allocate memory to store payload
-                auto pub_key = (char*)malloc(message->payloadlen + 1);
-                memset(pub_key, 0, message->payloadlen + 1);
-                snprintf(pub_key, message->payloadlen + 1, "%s", (char*)message->payload);
+    if(string(topic).find(hs_topic) != string::npos) 
+    {
+        // Handles the handshake payload
+        HandleHandshake(message);
 
-                // Save public key
-                manager->SavePublicKey(pub_key, message->payloadlen);
-                pk_saved = true;
-
-                // Send symetric key to server
-                auto iv = aes_cipher->GetIV();
-                auto key = aes_cipher->GetKey();
-                
-                cipher->LoadPublicKey(pub_key, message->payloadlen + 1);
-                
-                // Free memory used
-                free(pub_key);
-
-                auto header = base64_encode(string("/sk"));
-                auto base64_iv = base64_encode(iv, AES_BLOCK_SIZE);
-                auto base64_key = base64_encode(key, aes_cipher->GetKeySize());
-                auto payload = header + base64_key + base64_iv;
-
-                // Publish symetric keys to topic
-                PublishEncrypted(payload, send_topic);
-
-                Log::LogInfo("Public key saved");
-            } catch(std::runtime_error& e) {
-                Log::LogError("Failed to save public key: " + string(e.what()));
-            }
-        } else {
-            Log::LogInfo("Ignoring handshake message");
-        }
-
+        // Free resources
         MQTTClient_freeMessage(&message);
         MQTTClient_free(topic);
 
@@ -274,6 +263,9 @@ void MqttClient::SendHeartbeat()
     const auto qualityOfService = 2;
 
     Publish(this->heartbeat_payload, getHeartbeatTopic(), qualityOfService, false);
+
+    // Stores the time
+    uHeartbeatStartTime.store(GetTickCount());
 }
 
 string MqttClient::getRecvTopic()
@@ -318,7 +310,7 @@ void MqttClient::PublishEncrypted(string data, string topic)
         SendError();
     
     // Free memory
-    free(payload);
+    delete payload;
 }
 
 void MqttClient::PublishEncrypted(vector<string> data, string topic)
@@ -352,4 +344,78 @@ KeyManager *MqttClient::GetKeyManager()
 void MqttClient::setSymetricCipher(Crypto::AESCipher *cipher)
 {
     this->aes_cipher = cipher;
+}
+
+void MqttClient::SendSymmetricKey(MQTTClient_message *message)
+{
+    // Send symetric key to server
+    auto iv = aes_cipher->GetIV();
+    auto key = aes_cipher->GetKey();
+
+    // Encode sk packet
+    auto header = Utils::ToHex("/sk");
+    auto hex_iv = Utils::ToHex(iv, AES_BLOCK_SIZE);
+    auto hex_key = Utils::ToHex(key, aes_cipher->GetKeySize());
+
+    auto full_size = strlen(header) + strlen(hex_iv) + strlen(hex_key) + 1;
+    auto payload = new char[full_size];
+
+    if((snprintf(payload, full_size, "%s%s%s", header, hex_iv, hex_key)) <= 0) {
+        throw std::runtime_error("snprintf failed to build sk payload");
+    }
+
+    // Publish symetric keys to topic
+    PublishEncrypted(payload, send_topic);
+
+    // Free memory
+    delete[] header;
+    delete[] hex_iv;
+    delete[] hex_key;
+    delete[] payload;
+
+    Log::LogInfo("Symmetric key sent to server (%u bytes)", full_size + RSA_size(cipher->GetRSAContext()));
+}
+
+void MqttClient::HandleHandshake(MQTTClient_message *message)
+{
+    if(!bPublicKeySaved.load()) 
+    {
+        try 
+        {
+            // Save public key into disk
+            SaveRSAPk(message);
+
+            // Send symmetric key to server
+            SendSymmetricKey(message);
+
+            // All handshake process has been completed
+            bHeartbeatReceived.store(true);
+
+        } catch(std::runtime_error& e) 
+        {
+            Log::LogPanic("Failed to save public key: %s", e.what());
+        } catch(std::bad_alloc& b) {
+            Log::LogPanic("Failed to save public key: %s", b.what());
+        }
+    }
+}
+
+void MqttClient::CheckHandshake()
+{
+    Log::LogInfo("Waiting server to acnowledge the handshake request");
+
+    while(!bHeartbeatReceived.load())
+    {
+        auto now = GetTickCount();
+
+        // If timeout exceeded
+        if((now - uHeartbeatStartTime.load()) > HB_RESPONSE_TIMEOUT) {
+            Log::LogError("Timeout to receive heartbeat from server has been exceeded");
+
+            // Restart application
+            Utils::RestartCurrentApplication(5);
+        }
+    }
+
+    Log::LogInfo("Handshake request responded");
 }

@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <atomic>
 #include "rsa.hpp"
 #include "aes.hpp"
 #include "key_manager.hpp"
@@ -21,6 +22,57 @@
 #define CLIENT_ID_LENGTH    32
 
 using namespace std;
+
+/**
+ * @brief Timeout to server to acnowledge the heartbeat
+ * 
+ */
+#define HB_RESPONSE_TIMEOUT	10000
+
+enum MqttTopicID {
+	
+	/**
+	 * @brief Name of the base topic
+	 * 
+	 */
+	MQTT_TOPIC_BASE,
+
+	/**
+	 * @brief Topic used to receive commands
+	 * 
+	 */
+	MQTT_TOPIC_INPUT,
+
+	/**
+	 * @brief Topic used to send command responses
+	 * 
+	 */
+	MQTT_TOPIC_OUTPUT,
+
+	/**
+	 * @brief Topic used to do the handshake
+	 * 
+	 */
+	MQTT_TOPIC_HANDSHAKE,
+};
+
+/**
+ * @brief Struct that stores the default topics used to make requests
+ * 
+ */
+struct MqttTopics {
+	string Name;
+	unsigned Id;
+};
+
+
+static const struct MqttTopics topics[] = 
+{
+	{ "horus/cmd", MQTT_TOPIC_BASE },
+	{ "command", MQTT_TOPIC_INPUT },
+	{ "output", MQTT_TOPIC_OUTPUT },
+	{ "hs", 	MQTT_TOPIC_HANDSHAKE }
+};
 
 /**
  * @brief MQTT Client class
@@ -264,6 +316,18 @@ public:
 	 */
 	void SendHeartbeat();
 
+	/**
+	 * @brief Sends to server the symmetric key generated
+	 * 
+	 * @param message 
+	 */
+	void SendSymmetricKey(MQTTClient_message *message);
+
+	/**
+	 * @brief Checks if handshake has been responded
+	 * 
+	 */
+	void CheckHandshake();
 private:
 	/**
 	 * @brief Configure MQTT client options
@@ -272,12 +336,54 @@ private:
 	 */
 	void ConfigureOptions(void *options);
 
+	/**
+	 * @brief 
+	 * 
+	 * @param message 
+	 */
+	void SaveRSAPk(MQTTClient_message *message);
+
+	/**
+	 * @brief 
+	 * 
+	 * @param message 
+	 */
+	void HandleHandshake(MQTTClient_message *message);
 private:
+	/**
+	 * @brief Quality of service
+	 * 
+	 */
 	unsigned qos;
+
+	/**
+	 * @brief Handle to MqttClient (aka *this)
+	 * 
+	 */
 	void *client;
+
+	/**
+	 * @brief Broker hostname
+	 * 
+	 */
 	string broker_host;
+
+	/**
+	 * @brief Timeout before trying to reconnect
+	 * 
+	 */
 	unsigned reconnect_timeout;
+
+	/**
+	 * @brief 
+	 * 
+	 */
 	const unsigned yield_delay_ms = 5000U;
+
+	/**
+	 * @brief Handle to command dispatcher
+	 * 
+	 */
 	void *dispatcher;
 
 	/**
@@ -309,6 +415,11 @@ private:
 	 * 
 	 */
 	string client_id;
+
+	/**
+	 * @brief Pure heartbeat payload
+	 * 
+	 */
 	const string heartbeat_payload = "/hb";
 
 	/**
@@ -328,6 +439,24 @@ private:
 	 * 
 	 */
 	KeyManager *manager;
+
+	/**
+	 * @brief Flag to check if public key is saved
+	 * 
+	 */
+	atomic<bool> bPublicKeySaved;
+
+	/**
+	 * @brief Stores the tick where heartbeat has been sent
+	 * 
+	 */
+	atomic<unsigned long> uHeartbeatStartTime;
+
+	/**
+	 * @brief Used to check if heartbeat request has been responded
+	 * 
+	 */
+	atomic<bool> bHeartbeatReceived;
 };
 
 #endif

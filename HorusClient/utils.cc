@@ -94,16 +94,31 @@ vector<string> Utils::Split(string s, char delim)
     return v;
 }
 
-char *ToHex(string text)
+char *Utils::ToHex(string text)
 {
     int size = text.length();
-    int limit = (text.length() * 2) + 1;
-    char *hexstring = (char*)malloc(sizeof(char) * limit);
+    int limit = ((text.length() * 2) + 1) * sizeof(char);
+    char *hexstring = new char[limit];
 
     // Initialize memory
-    RtlSecureZeroMemory(&hexstring, sizeof(hexstring));
+    RtlSecureZeroMemory(hexstring, limit);
 
     for(auto i = 0, j = 0; i < size; i++, j += 2) {
+        snprintf(&hexstring[j], 3, "%.2x", text[i]);
+    }
+
+    return hexstring;
+}
+
+char *Utils::ToHex(unsigned char *text, size_t len)
+{
+    int limit = ((len * 2) + 1) * sizeof(unsigned char);
+    char *hexstring = new char[limit];
+
+    // Initialize memory
+    RtlSecureZeroMemory(hexstring, limit);
+
+    for(auto i = 0, j = 0; i < len; i++, j += 2) {
         snprintf(&hexstring[j], 3, "%.2x", text[i]);
     }
 

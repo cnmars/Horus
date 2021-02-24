@@ -67,6 +67,15 @@ public:
 	static char *ToHex(string text);
 
 	/**
+	 * @brief Convert a string to hexadecimal
+	 * 
+	 * @param text 
+	 * @param len 
+	 * @return char* 
+	 */
+	static char *ToHex(unsigned char *text, size_t len);
+
+	/**
 	 * @brief Restarts the current application
 	 * 
 	 * @param timeout_secs Timeout in seconds

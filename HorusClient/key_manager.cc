@@ -17,6 +17,7 @@ using namespace std;
 KeyManager::KeyManager()
 {
 	this->filename = "public_key.dat";
+	this->pk = "";
 }
 
 string KeyManager::GetFilename() {
@@ -49,7 +50,7 @@ string KeyManager::ReadPublicKey() {
 		// Allocate memory
 		auto data = new char[size];
 		if(!data) {
-			throw std::runtime_error("Failed to allocate memory to store public key");
+			throw std::runtime_error("cannot allocate memory to store public key");
 		}
 
 		file.read(data, size);

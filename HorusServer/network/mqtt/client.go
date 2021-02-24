@@ -7,6 +7,7 @@ import (
 	"HorusServer/utils"
 	"fmt"
 	"log"
+	"time"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -74,6 +75,13 @@ func onHeartbeatReceived(client MQTT.Client, message MQTT.Message) {
 }
 
 func sendCommands() {
+
+	// Wait until at least one client has been registered
+	for len(memoryDatabase.GetAllClients()) == 0 {
+		time.Sleep(time.Second)
+	}
+
+	// Listens to new commands sent by controller
 	for {
 		select {
 		case cmd := <-controller.Commands:
@@ -88,6 +96,9 @@ func sendCommands() {
 					client.Publish(cl.CmdTopic, qosLevel, false, cmd)
 				}
 			}
+
+			// Notify controller that the command has been sent to all clients
+			controller.CommandSent <- true
 
 			break
 		}

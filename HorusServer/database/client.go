@@ -76,7 +76,7 @@ func SaveEncryptionKey(clientID string, key []byte) (err error) {
 		return fail
 	}
 
-	client.Logger.Printf("[INFO] Encryption key: %v", key)
+	client.Logger.Printf("[INFO] Saving encryption key: %v", key)
 
 	// Set encryption key
 	client.EncryptionKey = []byte(key)
@@ -92,7 +92,7 @@ func SaveIV(clientID string, iv []byte) (err error) {
 		return fail
 	}
 
-	client.Logger.Printf("[INFO] Initialization vector: %v", iv)
+	client.Logger.Printf("[INFO] Saving initialization vector: %v", iv)
 
 	// Update IV
 	client.IV = []byte(iv)

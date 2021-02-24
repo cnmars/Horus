@@ -126,8 +126,10 @@ char *Crypto::RSACipher::Encrypt(const char *buffer, size_t len)
     // Free used memory
     delete[] encryptedBuffer;
 
-    // Allocate memory to store encrypted buffer
+    // Calculates number of bytes needed to store the encrypted payload
     auto encrypted_buffer_size = encodedBuffer.length() * sizeof(char);
+
+    // Allocate memory to store encrypted buffer
     auto s = new char[encrypted_buffer_size];
     if(!s) {
         Log::LogPanic("Failed to allocate memory: %s\n", strerror(errno));
@@ -139,7 +141,7 @@ char *Crypto::RSACipher::Encrypt(const char *buffer, size_t len)
     RtlSecureZeroMemory(s, encrypted_buffer_size);
 
     // Copy encrypted string to buffer and check for error
-    if(strncpy(s, encodedBuffer.c_str(), encrypted_buffer_size) == nullptr) {
+    if(strncpy(s, encodedBuffer.c_str(), encrypted_buffer_size - 1) == nullptr) {
         Log::LogPanic("Uncontained runtime error");
     }
 

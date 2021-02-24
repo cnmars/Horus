@@ -22,6 +22,8 @@ Crypto::AESCipher::AESCipher()
     bits = 128;
 
     keySize = (bits / 8) * sizeof(unsigned char);
+
+    Log::LogInfo("Setting up AES Cipher ...");
 }
 
 Crypto::AESCipher::AESCipher(EncryptionType t) : AESCipher()
@@ -36,7 +38,7 @@ Crypto::AESCipher::AESCipher(EncryptionType t) : AESCipher()
 
     // allocate memory to store key
     auto mem_to_alloc = (bits / 8) * sizeof(unsigned char);
-    key = (unsigned char*)malloc(mem_to_alloc);
+    key = new unsigned char[mem_to_alloc];
 
     if(!key) {
         Log::LogPanic("Failed to allocate memory for AES key: %s", strerror(errno));
@@ -78,7 +80,7 @@ unsigned char *Crypto::AESCipher::Encrypt(string buffer)
     str_size = (str_size < AES_BLOCK_SIZE) ? AES_BLOCK_SIZE : str_size;
 
     // Allocate memory
-    full_output = (unsigned char*)malloc(sizeof(unsigned char) * str_size);
+    full_output = new unsigned char[sizeof(unsigned char) * str_size];
     
     assert(full_output != nullptr);
 
@@ -113,7 +115,7 @@ const unsigned char *Crypto::AESCipher::GenerateIV()
 
     if(!have_iv) {
         for(auto i = 0; i < ARRAYSIZE(this->iv); ++i) {
-            this->iv[i] = (const UCHAR)rand() % 255;
+            this->iv[i] = (const UCHAR)((rand() % 255) + 1);
         }
         have_iv = true;
     }
@@ -127,7 +129,7 @@ unsigned char *Crypto::AESCipher::GenerateKey()
 
     if(!have_key) {
         for(auto i = 0; i < keySize; i++) {
-            this->key[i] = (UCHAR)rand() % 255;
+            this->key[i] = (UCHAR)((rand() % 255) + 1);
         }
         have_key = true;
     }

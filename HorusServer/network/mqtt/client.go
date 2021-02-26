@@ -90,11 +90,8 @@ func sendCommands() {
 			allClients := memoryDatabase.GetAllClients()
 
 			for _, cl := range allClients {
-				// Ignore deleted clients
-				if !cl.Deleted {
-					fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
-					client.Publish(cl.CmdTopic, qosLevel, false, cmd)
-				}
+				fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
+				client.Publish(cl.CmdTopic, qosLevel, false, cmd)
 			}
 
 			// Notify controller that the command has been sent to all clients

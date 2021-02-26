@@ -100,16 +100,11 @@ func SaveIV(clientID string, iv []byte) (err error) {
 	return
 }
 
-// DeleteClient makes a logical deletion of the specified client in memory
+// DeleteClient deletes the specified client from memory
 func DeleteClient(clientID string) (err error) {
 
-	client, fail := FindClientbyID(clientID)
-	if fail != nil {
-		return fail
-	}
-
 	// Delete client
-	client.Deleted = true
+	delete(clients, clientID)
 
 	return
 }

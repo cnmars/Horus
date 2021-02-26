@@ -29,9 +29,6 @@ type Client struct {
 	// BaseTopic topic from which all others are derived
 	BaseTopic string `json:"base_topic"`
 
-	// Deleted flag is used to make a logical deletion
-	Deleted bool `json:"deleted"`
-
 	// Logger used to register client messages
 	Logger *log.Logger
 }
@@ -124,7 +121,6 @@ func (c *Client) SetupClientInformation() {
 		c.CmdTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDCmd))
 		c.HandshakeTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDHs))
 		c.OutputTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDOut))
-		c.Deleted = false
 
 		// Configure logger
 		logFilename := fmt.Sprintf("client_%s.log", c.ID)

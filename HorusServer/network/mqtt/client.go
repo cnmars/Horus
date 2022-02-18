@@ -83,21 +83,20 @@ func sendCommands() {
 
 	// Listens to new commands sent by controller
 	for {
-		select {
-		case cmd := <-controller.Commands:
 
-			// Dispatch the new command to all connected clients
-			allClients := memoryDatabase.GetAllClients()
+		cmd := <-controller.Commands
 
-			for _, cl := range allClients {
-				fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
-				client.Publish(cl.CmdTopic, qosLevel, false, cmd)
-			}
+		// Dispatch the new command to all connected clients
+		allClients := memoryDatabase.GetAllClients()
 
-			// Notify controller that the command has been sent to all clients
-			controller.CommandSent <- true
-
-			break
+		for _, cl := range allClients {
+			fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
+			token := client.Publish(cl.CmdTopic, qosLevel, false, cmd)
+			waitForToken(token)
 		}
+
+		// Notify controller that the command has been sent to all clients
+		controller.CommandSent <- true
+
 	}
 }

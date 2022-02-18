@@ -56,7 +56,7 @@ func dispatchMessage(msg *TranslatedMessage) {
 }
 
 func isHandshakeRequest(msg string) bool {
-	requestName := model.GetRequestNameByID(model.RequestIDHeartbeat)
+	requestName := model.GetRequestNameByID(model.RequestIDHandshake)
 
 	return requestName == msg
 }

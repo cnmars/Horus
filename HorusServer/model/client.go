@@ -29,6 +29,9 @@ type Client struct {
 	// BaseTopic topic from which all others are derived
 	BaseTopic string `json:"base_topic"`
 
+	// HeartbeatTopic topic used to receive heartbeat responses
+	HeartbeatTopic string `json:"heartbeat_topic"`
+
 	// Logger used to register client messages
 	Logger *log.Logger
 }
@@ -61,12 +64,16 @@ var (
 
 	// TopicIDBase topic from which all others are derived
 	TopicIDBase = 4
+
+	// TopicIDHb topic used to receive heartbeat responses
+	TopicIDHb = 5
 )
 
 // Request ID's
 var (
 	RequestIDHeartbeat         = 10
 	RequestIDSaveEncryptionKey = 11
+	RequestIDHandshake         = 12
 )
 
 var (
@@ -76,12 +83,14 @@ var (
 		{ID: TopicIDOut, Name: "output"},
 		{ID: TopicIDCmd, Name: "command"},
 		{ID: TopicIDHs, Name: "hs"},
+		{ID: TopicIDHb, Name: "hb"},
 	}
 
 	// ClientRequests contains all valid requests that can be sent by client
 	ClientRequests = []ClientRequest{
 		{ID: RequestIDHeartbeat, Name: "/hb"},
 		{ID: RequestIDSaveEncryptionKey, Name: "/sk"},
+		{ID: RequestIDHandshake, Name: "/hs"},
 	}
 )
 
@@ -121,6 +130,7 @@ func (c *Client) SetupClientInformation() {
 		c.CmdTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDCmd))
 		c.HandshakeTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDHs))
 		c.OutputTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDOut))
+		c.HeartbeatTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDHb))
 
 		// Configure logger
 		logFilename := fmt.Sprintf("client_%s.log", c.ID)
@@ -133,6 +143,7 @@ func (c *Client) SetupClientInformation() {
 			c.Logger.Printf("[INFO] cmd topic: %v", c.CmdTopic)
 			c.Logger.Printf("[INFO] hs topic: %v", c.HandshakeTopic)
 			c.Logger.Printf("[INFO] output topic: %v", c.OutputTopic)
+			c.Logger.Printf("[INFO] hb topic: %v", c.HeartbeatTopic)
 		}
 
 		return

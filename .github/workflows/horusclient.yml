@@ -1,42 +1,28 @@
-name: Client (Windows)
+name: Client
 
-on: [push]
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Debug
+on: push
 
 jobs:
   build:
-    runs-on: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        
     steps:
     - uses: actions/checkout@v2
-      
-    - name: Install/Upgrade MinGW
-      run: choco upgrade mingw
-  
-    - name: Show Compiler Version
-      run: g++ -v
 
-    - name: Generate makefiles
-      # Use a bash shell so we can use the same syntax for environment variable
-      # access regardless of the host operating system
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.13
+
+    - name: Get Packages
       shell: bash
-      working-directory: ${{github.workspace}}/MQClient
-      # Note the current convention is to use the -S and -B options here to specify source 
-      # and build directories, but this is only available with CMake 3.13 and higher.  
-      # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: cmake -G "MinGW Makefiles" -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE    
+      working-directory: ${{github.workspace}}/HorusClient
+      run: go get -v
       
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    
-    - name: Build
-      working-directory: ${{github.workspace}}/MQClient/build
+    - name: Build client
       shell: bash
-      env:
-        CXX_FLAGS: --std=c++17
-      # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build . --config $BUILD_TYPE
+      working-directory: ${{github.workspace}}/HorusClient
+      run: go build -v

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 )
 
 // Commands stores all command pending
@@ -45,6 +46,12 @@ func ReadCommands() {
 
 		// Insert command to channel
 		Commands <- command
+
+		go func() {
+			time.Sleep(time.Second * 10)
+			CommandSent <- true
+			fmt.Printf("[INFO] Timeout reached\n")
+		}()
 
 		fmt.Println("[INFO] Waiting command to be sent for all clients ...")
 

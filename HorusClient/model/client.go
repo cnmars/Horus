@@ -17,7 +17,7 @@ type Client struct {
 	// IV contains the initialization vector used for decryption
 	IV []byte `json:"initialization_vector"`
 
-	// CmdTopic topic used to send commands
+	// CmdTopic topic used to receive commands
 	CmdTopic string `json:"command_topic"`
 
 	// OutputTopic topic used to send command responses
@@ -29,7 +29,7 @@ type Client struct {
 	// BaseTopic topic from which all others are derived
 	BaseTopic string `json:"base_topic"`
 
-	// HeartbeatTopic topic used to receive heartbeat responses
+	// HeartbeatTopic topic used to send heartbeat responses
 	HeartbeatTopic string `json:"heartbeat_topic"`
 
 	// Logger used to register client messages

@@ -4,6 +4,7 @@ import (
 	"HorusClient/model"
 	"HorusClient/utils"
 	"log"
+	"sync"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -18,15 +19,18 @@ var client MQTT.Client
 var customClient *model.Client
 
 // qosLevel contains the value used for QoS
-var qosLevel byte
+var qos byte = 0
 
 // retained is the flag used to
 const retained = false
 
+// Global mutex
+var mu *sync.Mutex
+
 // Start function starts the MQTT client with the specified QoS level
 func Start(QoS byte) {
 	// Update QoS level
-	qosLevel = QoS
+	qos = QoS
 
 	// Configure options
 	options := MQTT.NewClientOptions()
@@ -35,7 +39,7 @@ func Start(QoS byte) {
 	options.SetClientID(utils.GenerateUUID())
 	options.CleanSession = false
 	options.WillRetained = false
-	options.WillQos = qosLevel
+	options.WillQos = qos
 
 	// Start client
 	client = MQTT.NewClient(options)
@@ -46,7 +50,16 @@ func Start(QoS byte) {
 
 	log.Printf("[INFO] Connected to %v\n", brokerHostname)
 
-	customClient = newClient()
+	customClient = newClient(options.ClientID)
+
+	// Perform subscriptions
+	waitForToken(client.Subscribe(customClient.OutputTopic, qos, onResponseReceived))
+	waitForToken(client.Subscribe(customClient.CmdTopic, qos, onCommandReceived))
+
+	// Send handshake request
+	sendHandshake()
+
+	executeCommands()
 }
 
 // Stop function stops the MQTT client
@@ -61,14 +74,14 @@ func waitForToken(token MQTT.Token) {
 }
 
 func publish(topic, message string) {
-	token := client.Publish(topic, qosLevel, retained, message)
+	token := client.Publish(topic, qos, retained, message)
 	waitForToken(token)
 }
 
-func onMessageReceived(client MQTT.Client, message MQTT.Message) {
+func onResponseReceived(client MQTT.Client, message MQTT.Message) {
 	go handleMessage(client, message)
 }
 
-func onHeartbeatReceived(client MQTT.Client, message MQTT.Message) {
+func onCommandReceived(client MQTT.Client, message MQTT.Message) {
 	go handleMessage(client, message)
 }

@@ -2,9 +2,9 @@ package mqtt
 
 import "HorusClient/model"
 
-func newClient() (c *model.Client) {
+func newClient(id string) (c *model.Client) {
 
-	client := &model.Client{}
+	client := &model.Client{ID: id}
 	client.Setup()
 
 	return client

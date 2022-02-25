@@ -25,7 +25,7 @@ var qos byte = 0
 const retained = false
 
 // Global mutex
-var mu *sync.Mutex
+var mu sync.Mutex
 
 // Start function starts the MQTT client with the specified QoS level
 func Start(QoS byte) {

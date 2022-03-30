@@ -17,19 +17,16 @@ type Client struct {
 	// IV contains the initialization vector used for decryption
 	IV []byte `json:"initialization_vector"`
 
-	// CmdTopic topic used to send commands
+	// CmdTopic topic used to receive commands
 	CmdTopic string `json:"command_topic"`
 
 	// OutputTopic topic used to send command responses
 	OutputTopic string `json:"output_topic"`
 
-	// HandshakeTopic topic used to send handshake
-	HandshakeTopic string `json:"handshake_topic"`
-
 	// BaseTopic topic from which all others are derived
 	BaseTopic string `json:"base_topic"`
 
-	// HeartbeatTopic topic used to receive heartbeat responses
+	// HeartbeatTopic topic used to send heartbeat responses
 	HeartbeatTopic string `json:"heartbeat_topic"`
 
 	// Logger used to register client messages
@@ -56,24 +53,20 @@ var (
 	// TopicIDCmd topic used to send commands
 	TopicIDCmd = 1
 
-	// TopicIDHs topic used to send handshake
-	TopicIDHs = 2
-
 	// TopicIDOut topic used to receive command responses
-	TopicIDOut = 3
+	TopicIDOut = 2
 
 	// TopicIDBase topic from which all others are derived
-	TopicIDBase = 4
+	TopicIDBase = 3
 
 	// TopicIDHb topic used to receive heartbeat responses
-	TopicIDHb = 5
+	TopicIDHb = 4
 )
 
 // Request ID's
 var (
 	RequestIDHeartbeat         = 10
 	RequestIDSaveEncryptionKey = 11
-	RequestIDHandshake         = 12
 )
 
 var (
@@ -82,15 +75,12 @@ var (
 		{ID: TopicIDBase, Name: "horus/cmd"},
 		{ID: TopicIDOut, Name: "output"},
 		{ID: TopicIDCmd, Name: "command"},
-		{ID: TopicIDHs, Name: "hs"},
 		{ID: TopicIDHb, Name: "hb"},
 	}
 
 	// ClientRequests contains all valid requests that can be sent by client
 	ClientRequests = []ClientRequest{
 		{ID: RequestIDHeartbeat, Name: "/hb"},
-		{ID: RequestIDSaveEncryptionKey, Name: "/sk"},
-		{ID: RequestIDHandshake, Name: "/hs"},
 	}
 )
 
@@ -121,14 +111,13 @@ func GetRequestNameByID(requestID int) (name string) {
 	return
 }
 
-// SetupClientInformation function configures name of topics used by clients
-func (c *Client) SetupClientInformation() {
+// Setup function configures name of topics used by clients
+func (c *Client) Setup() {
 	if len(c.ID) > 0 {
 
 		// Setup topic names
 		c.BaseTopic = fmt.Sprintf("%s/%s", GetTopicNameByID(TopicIDBase), c.ID)
 		c.CmdTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDCmd))
-		c.HandshakeTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDHs))
 		c.OutputTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDOut))
 		c.HeartbeatTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDHb))
 
@@ -141,7 +130,6 @@ func (c *Client) SetupClientInformation() {
 			c.Logger = log.New(fileHandle, "", log.Ldate|log.Ltime)
 			c.Logger.Printf("[INFO] base topic: %v", c.BaseTopic)
 			c.Logger.Printf("[INFO] cmd topic: %v", c.CmdTopic)
-			c.Logger.Printf("[INFO] hs topic: %v", c.HandshakeTopic)
 			c.Logger.Printf("[INFO] output topic: %v", c.OutputTopic)
 			c.Logger.Printf("[INFO] hb topic: %v", c.HeartbeatTopic)
 		}

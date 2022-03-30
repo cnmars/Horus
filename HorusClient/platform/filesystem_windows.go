@@ -3,6 +3,10 @@
 
 package platform
 
+import (
+	"golang.org/x/sys"
+)
+
 func GetUserName() string {
 
 	usr, fail := user.Current()

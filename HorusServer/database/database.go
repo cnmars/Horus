@@ -44,7 +44,7 @@ func RegisterClient(clientID string) (*model.Client, error) {
 	client.ID = clientID
 
 	// Setup topic names for the client
-	client.SetupClientInformation()
+	client.Setup()
 
 	// Inserts the new client into channel
 	newClients <- *client

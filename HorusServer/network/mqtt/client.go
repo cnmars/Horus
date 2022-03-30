@@ -1,10 +1,12 @@
 package mqtt
 
 import (
+	"HorusServer/cipher"
 	"HorusServer/controller"
 	memoryDatabase "HorusServer/database"
 	"HorusServer/model"
 	"HorusServer/utils"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
@@ -41,6 +43,8 @@ func Start(QoS byte) {
 	token := client.Connect()
 	waitForToken(token)
 
+	log.Printf("[INFO] Connected to %v", brokerHostname)
+
 	// Gets the name of base topic
 	baseTopic := model.GetTopicNameByID(model.TopicIDBase)
 
@@ -74,6 +78,24 @@ func onHeartbeatReceived(client MQTT.Client, message MQTT.Message) {
 	go handleMessage(client, message)
 }
 
+func encodeCommand(command string) []byte {
+
+	var encryptedCommand []byte = make([]byte, len(command))
+	var dest []byte
+
+	// Encrypt with AES256
+	cipher.Encrypt([]byte(command), encryptedCommand)
+
+	encodedSize := base64.RawStdEncoding.EncodedLen(len(encryptedCommand))
+
+	// Allocates memory to store base64 encoded command
+	dest = make([]byte, encodedSize)
+
+	base64.RawStdEncoding.Encode(dest, []byte(command))
+
+	return dest
+}
+
 func sendCommands() {
 
 	// Wait until at least one client has been registered
@@ -91,7 +113,11 @@ func sendCommands() {
 
 		for _, cl := range allClients {
 			fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
-			token := client.Publish(cl.CmdTopic, qosLevel, false, cmd)
+
+			// Encode command
+			encodedCommand := string(encodeCommand(cmd))
+
+			token := client.Publish(cl.CmdTopic, qosLevel, false, encodedCommand)
 			waitForToken(token)
 		}
 

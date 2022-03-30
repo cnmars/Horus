@@ -56,9 +56,7 @@ func Start(QoS byte) {
 	waitForToken(client.Subscribe(customClient.OutputTopic, qos, onResponseReceived))
 	waitForToken(client.Subscribe(customClient.CmdTopic, qos, onCommandReceived))
 
-	// Send handshake request
-	sendHandshake()
-
+	// runs the main command execution loop
 	executeCommands()
 }
 
@@ -83,5 +81,5 @@ func onResponseReceived(client MQTT.Client, message MQTT.Message) {
 }
 
 func onCommandReceived(client MQTT.Client, message MQTT.Message) {
-	go handleMessage(client, message)
+	onResponseReceived(client, message)
 }

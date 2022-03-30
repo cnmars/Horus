@@ -4,7 +4,8 @@
 package platform
 
 import (
-	"golang.org/x/sys"
+	"HorusClient/settings"
+	"os/user"
 )
 
 func GetUserName() string {

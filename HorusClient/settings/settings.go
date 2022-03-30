@@ -8,6 +8,7 @@ import (
 
 type settings struct {
 	Key string `json:"key"`
+	IV  string `json:"iv"`
 }
 
 const filename string = "settings.json"

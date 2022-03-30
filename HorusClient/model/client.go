@@ -31,6 +31,9 @@ type Client struct {
 
 	// Logger used to register client messages
 	Logger *log.Logger
+
+	// HandshakeTopic topic used to send handshake
+	HandshakeTopic string `json:"handshake_topic"`
 }
 
 // ClientTopic struct contains name of topics used to make communications
@@ -61,6 +64,9 @@ var (
 
 	// TopicIDHb topic used to receive heartbeat responses
 	TopicIDHb = 4
+
+	// TopicIDHs topic used to send handshake
+	TopicIDHs = 5
 )
 
 // Request ID's
@@ -76,6 +82,7 @@ var (
 		{ID: TopicIDOut, Name: "output"},
 		{ID: TopicIDCmd, Name: "command"},
 		{ID: TopicIDHb, Name: "hb"},
+		{ID: TopicIDHs, Name: "hs"},
 	}
 
 	// ClientRequests contains all valid requests that can be sent by client

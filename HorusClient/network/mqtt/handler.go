@@ -12,21 +12,19 @@ import (
 )
 
 func decryptCommand(cmd string) (string, error) {
-	var dest, decryptedCommand []byte
+	var b64DecodedCommand []byte
 	decodedSize := base64.RawStdEncoding.DecodedLen(len(cmd))
 
-	dest = make([]byte, decodedSize)
-	_, err := base64.RawStdEncoding.Decode(dest, []byte(cmd))
+	b64DecodedCommand = make([]byte, decodedSize)
+	_, err := base64.RawStdEncoding.Decode(b64DecodedCommand, []byte(cmd))
 	if err != nil {
 		return "", fmt.Errorf("could not decode command")
 	}
 
-	decryptedCommand = make([]byte, len(dest))
-
 	// Perform decryption
-	err = cipher.Decrypt(dest, decryptedCommand)
+	decryptedCommand, err := cipher.Decrypt(b64DecodedCommand)
 
-	return string(dest), err
+	return string(decryptedCommand), err
 }
 
 func handleMessage(client MQTT.Client, message MQTT.Message) {

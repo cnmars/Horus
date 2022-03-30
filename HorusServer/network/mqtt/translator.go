@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -31,7 +30,7 @@ func translateMessage(client MQTT.Client, message MQTT.Message) (translated *Tra
 	}
 
 	if len(payload) == 0 {
-		fmt.Printf("[ERROR] Empty payload received on topic: %v", topic)
+		log.Printf("[ERROR] Empty payload received on topic: %v", topic)
 		return
 	}
 

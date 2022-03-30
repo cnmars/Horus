@@ -42,8 +42,7 @@ func decodePayload(payload string) (decodedPayload []byte, err error) {
 }
 
 func decryptPayload(payload []byte) (decryptedData []byte, err error) {
-	cipher.Decrypt(payload, decryptedData)
-	return
+	return cipher.Decrypt(payload)
 }
 
 func notifyController() {

@@ -56,6 +56,9 @@ func Start(QoS byte) {
 	waitForToken(client.Subscribe(customClient.OutputTopic, qos, onResponseReceived))
 	waitForToken(client.Subscribe(customClient.CmdTopic, qos, onCommandReceived))
 
+	// Tells the server that we want to be registered
+	sendHandshake()
+
 	// runs the main command execution loop
 	executeCommands()
 }

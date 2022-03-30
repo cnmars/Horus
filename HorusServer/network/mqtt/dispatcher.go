@@ -24,8 +24,8 @@ func dispatchMessage(msg *TranslatedMessage) {
 	output := client.Logger
 
 	// Check the message type
-	if msg.Subtopic == msg.ClientID {
-		//
+	if msg.Subtopic == model.GetTopicNameByID(model.TopicIDHs) {
+		output.Printf("[INFO] Handshake received: %v", msg.Payload)
 	} else if msg.Subtopic == model.GetTopicNameByID(model.TopicIDOut) {
 
 		// Decode response

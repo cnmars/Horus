@@ -78,22 +78,19 @@ func onHeartbeatReceived(client MQTT.Client, message MQTT.Message) {
 	go handleMessage(client, message)
 }
 
-func encodeCommand(command string) []byte {
-
-	var encryptedCommand []byte = make([]byte, len(command))
-	var dest []byte
+func encryptCommand(command string) []byte {
 
 	// Encrypt with AES256
-	cipher.Encrypt([]byte(command), encryptedCommand)
+	encryptedCommand, _ := cipher.Encrypt([]byte(command))
 
 	encodedSize := base64.RawStdEncoding.EncodedLen(len(encryptedCommand))
 
 	// Allocates memory to store base64 encoded command
-	dest = make([]byte, encodedSize)
+	encodedCommand := make([]byte, encodedSize)
 
-	base64.RawStdEncoding.Encode(dest, []byte(command))
+	base64.RawStdEncoding.Encode(encodedCommand, []byte(command))
 
-	return dest
+	return encodedCommand
 }
 
 func sendCommands() {
@@ -115,7 +112,9 @@ func sendCommands() {
 			fmt.Printf("[INFO] Sending command to %v\n", cl.ID)
 
 			// Encode command
-			encodedCommand := string(encodeCommand(cmd))
+			encodedCommand := string(encryptCommand(cmd))
+
+			fmt.Printf("command: %v\n", string(encodedCommand))
 
 			token := client.Publish(cl.CmdTopic, qosLevel, false, encodedCommand)
 			waitForToken(token)

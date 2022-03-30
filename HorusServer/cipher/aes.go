@@ -2,6 +2,7 @@ package cipher
 
 import (
 	"HorusServer/settings"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"fmt"
@@ -12,23 +13,35 @@ import (
 const keySize int = 32
 
 type AESContext struct {
-	Block cipher.Block
+	crypter   cipher.BlockMode
+	decrypter cipher.BlockMode
 }
 
-func (c AESContext) GetBlock() cipher.Block {
-	return c.Block
+func (c *AESContext) GetEncrypter() cipher.BlockMode {
+	return c.crypter
+}
+
+func (c *AESContext) GetDecrypter() cipher.BlockMode {
+	return c.decrypter
+}
+
+func (c *AESContext) SetDecrypter(sd cipher.BlockMode) {
+	c.decrypter = sd
+}
+
+func (c *AESContext) SetEncrypter(se cipher.BlockMode) {
+	c.crypter = se
 }
 
 var context *AESContext
 
 func SetupAES() {
-	context = &AESContext{}
-
 	// Setup AES cipher
-	getCipherKey()
+	setupCipher()
 }
 
-func getCipherKey() {
+func setupCipher() {
+
 	var err error
 
 	key := settings.GetConfig().Key
@@ -41,31 +54,43 @@ func getCipherKey() {
 		log.Fatalf("[ERROR] Failed to setup AES")
 	}
 
-	context.Block = block
+	context = &AESContext{
+		crypter:   cipher.NewCBCEncrypter(block, []byte(settings.GetConfig().IV)),
+		decrypter: cipher.NewCBCDecrypter(block, []byte(settings.GetConfig().IV)),
+	}
 
-	log.Printf("[INFO] Initialized AES cipher with block size %v", context.GetBlock().BlockSize())
+	log.Printf("[INFO] Initialized AES cipher with block size %v", context.GetEncrypter().BlockSize())
+}
+
+func PKCS7Padding(src []byte, blockSize int) []byte {
+
+	padding := blockSize - len(src)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(src, padtext...)
 }
 
 // Encrypt encrypts data with AES256
-func Encrypt(src, dest []byte) (err error) {
+func Encrypt(src []byte) ([]byte, error) {
 
 	if context == nil {
-		return fmt.Errorf("cipher not initialized")
+		return nil, fmt.Errorf("cipher not initialized")
 	}
 
-	context.GetBlock().Encrypt(src, dest)
+	cipherText := PKCS7Padding(src, context.GetEncrypter().BlockSize())
+	dest := make([]byte, len(cipherText))
+	context.GetEncrypter().CryptBlocks(dest, cipherText)
 
-	err = nil
-	return
+	return dest, nil
 }
 
 // Decrypt decrypts AES256 encrypted data
-func Decrypt(src, dest []byte) (err error) {
+func Decrypt(src []byte) ([]byte, error) {
 	if context == nil {
-		return fmt.Errorf("cipher not initialized")
+		return nil, fmt.Errorf("cipher not initialized")
 	}
 
-	context.GetBlock().Decrypt(src, dest)
-	err = nil
-	return
+	dest := make([]byte, len(src))
+	context.GetDecrypter().CryptBlocks(dest, src)
+
+	return dest, nil
 }

@@ -6,7 +6,7 @@ import (
 	memoryDatabase "HorusServer/database"
 	"HorusServer/model"
 	"HorusServer/utils"
-	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -83,12 +83,9 @@ func encryptCommand(command string) []byte {
 	// Encrypt with AES256
 	encryptedCommand, _ := cipher.Encrypt([]byte(command))
 
-	encodedSize := base64.RawStdEncoding.EncodedLen(len(encryptedCommand))
-
-	// Allocates memory to store base64 encoded command
-	encodedCommand := make([]byte, encodedSize)
-
-	base64.RawStdEncoding.Encode(encodedCommand, []byte(command))
+	// Encode to hex format
+	encodedCommand := make([]byte, len(encryptedCommand)*2)
+	hex.Encode(encodedCommand, encryptedCommand)
 
 	return encodedCommand
 }

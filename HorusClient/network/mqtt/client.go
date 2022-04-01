@@ -1,8 +1,10 @@
 package mqtt
 
 import (
+	"HorusClient/cipher"
 	"HorusClient/model"
 	"HorusClient/utils"
+	"encoding/hex"
 	"log"
 	"sync"
 
@@ -76,6 +78,19 @@ func waitForToken(token MQTT.Token) {
 
 func publish(topic, message string) {
 	token := client.Publish(topic, qos, retained, message)
+	waitForToken(token)
+}
+
+func publishEncrypted(topic, message string) {
+	// Encrypts message
+	cipherText, fail := cipher.Encrypt([]byte(message))
+	if fail != nil {
+		log.Printf("[ERROR] Could not encrypt message: %v", fail)
+		return
+	}
+
+	encryptedMessage := hex.EncodeToString(cipherText)
+	token := client.Publish(topic, qos, retained, encryptedMessage)
 	waitForToken(token)
 }
 

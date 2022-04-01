@@ -3,6 +3,7 @@ package mqtt
 import (
 	"HorusServer/database"
 	"HorusServer/model"
+	"bytes"
 	"log"
 )
 
@@ -29,25 +30,19 @@ func dispatchMessage(msg *TranslatedMessage) {
 	} else if msg.Subtopic == model.GetTopicNameByID(model.TopicIDOut) {
 
 		// Decode response
-		// 1 - perform base64 decoding
+		// 1 - perform hex decoding
 		// 2 - perform AES256 decryption
 
-		decodedPayload, decodeFail := decodePayload(msg.Payload)
+		decryptedData, decodeFail := decodePayload(msg.Payload)
 		if decodeFail != nil {
 			// Payload is not base64 encoded. Just show it on screen
 			output.Printf("[ERROR] Failed to decode payload: %v", decodeFail)
 			showClientResponse(msg.Payload, client.Logger)
-		} else {
-			// Decrypt
-			decryptedData, decryptErr := decryptPayload(decodedPayload)
-			if decryptErr != nil {
-				output.Printf("[ERROR] Failed to decrypt payload: %v", decryptErr)
-				output.Printf("[INFO] Encrypted payload: %v", decodedPayload)
-				return
-			}
-
-			client.Logger.Printf("[OUTPUT] %v", string(decryptedData))
 		}
+
+		// removes padding
+		decryptedData = bytes.Trim(decryptedData, "\x00")
+		client.Logger.Printf("[OUTPUT] %v", string(decryptedData))
 	} else {
 		output.Printf("[ERROR] Invalid subtopic detected: %v", msg.Subtopic)
 	}

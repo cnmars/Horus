@@ -7,6 +7,8 @@ For educational purposes only
 - Bypass most firewalls
 - Multiplatform client and server
 - AES256 encryption
+- Don't require you to open ports on your LAN
+- Dont't require a No-IP alias
 
 # Usage
 

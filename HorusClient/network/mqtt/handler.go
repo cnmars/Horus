@@ -1,30 +1,33 @@
 package mqtt
 
 import (
-	"encoding/base64"
-	"fmt"
+	"bytes"
+	"encoding/hex"
 	"log"
+	"strings"
 
 	"HorusClient/cipher"
 	model "HorusClient/model"
+	"HorusClient/settings"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
 func decryptCommand(cmd string) (string, error) {
-	var b64DecodedCommand []byte
-	decodedSize := base64.RawStdEncoding.DecodedLen(len(cmd))
 
-	b64DecodedCommand = make([]byte, decodedSize)
-	_, err := base64.RawStdEncoding.Decode(b64DecodedCommand, []byte(cmd))
+	decodedCommand, err := hex.DecodeString(cmd)
 	if err != nil {
-		return "", fmt.Errorf("could not decode command")
+		log.Printf("[ERROR] Could not decode hexadecimal data: %v", err)
+		return settings.EmptyString, nil
 	}
 
-	// Perform decryption
-	decryptedCommand, err := cipher.Decrypt(b64DecodedCommand)
+	// Decrypt command
+	decryptedCommand, err := cipher.Decrypt(decodedCommand)
+	if err != nil {
+		log.Printf("[ERROR] Could not decrypt command: %v", err)
+	}
 
-	return string(decryptedCommand), err
+	return strings.TrimSpace(string(decryptedCommand)), nil
 }
 
 func handleMessage(client MQTT.Client, message MQTT.Message) {
@@ -47,7 +50,7 @@ func handleMessage(client MQTT.Client, message MQTT.Message) {
 			return
 		}
 
-		CommandsChannel <- command
+		CommandsChannel <- string(bytes.Trim([]byte(command), "\x00"))
 	case model.GetTopicNameByID(model.TopicIDOut):
 		log.Printf("[INFO] Output: %v", msg.Payload)
 	}

@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"HorusClient/model"
 	"HorusClient/platform"
 	"log"
 	"time"
@@ -40,7 +39,8 @@ func executeCommands() {
 			log.Printf("[ERROR] Unknown command: %v", command)
 		case CmdGetUserName:
 			username := platform.GetUserName()
-			publish(model.GetTopicNameByID(model.TopicIDOut), username)
+
+			publishEncrypted(customClient.OutputTopic, username)
 		}
 
 		time.Sleep(time.Second)

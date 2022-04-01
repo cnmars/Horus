@@ -3,8 +3,7 @@ package mqtt
 import (
 	"HorusServer/cipher"
 	"HorusServer/controller"
-	"encoding/base64"
-	"log"
+	"encoding/hex"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -21,24 +20,22 @@ func handleMessage(client MQTT.Client, message MQTT.Message) {
 	notifyController()
 }
 
+// decodePayload decodes a payload from hex format and decrypts it with AES256 algorithm
 func decodePayload(payload string) (decodedPayload []byte, err error) {
 
-	// Calculates max length of decoded payload
-	maxLength := base64.RawStdEncoding.DecodedLen(len(payload))
-
-	log.Printf("[INFO] Maximum size of decoded data: %v bytes for %v", maxLength, len(payload))
-
-	// Allocate memory to store decoded data
-	var dest []byte = make([]byte, maxLength)
-
-	for s := range dest {
-		dest[s] = 0
+	// Decode from hex
+	encryptedPayload, err := hex.DecodeString(payload)
+	if err != nil {
+		return
 	}
 
-	// Decode
-	_, err = base64.RawStdEncoding.Decode(dest, []byte(payload))
+	// Decrypt payload
+	decryptedPayload, err := cipher.Decrypt([]byte(encryptedPayload))
+	if err != nil {
+		return
+	}
 
-	return dest, err
+	return decryptedPayload, nil
 }
 
 func decryptPayload(payload []byte) (decryptedData []byte, err error) {

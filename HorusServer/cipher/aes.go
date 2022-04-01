@@ -65,7 +65,7 @@ func setupCipher() {
 func PKCS7Padding(src []byte, blockSize int) []byte {
 
 	padding := blockSize - len(src)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	padtext := bytes.Repeat([]byte{byte(0)}, padding)
 	return append(src, padtext...)
 }
 

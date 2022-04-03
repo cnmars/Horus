@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 )
 
 // Client struct represents a remote client
@@ -34,6 +35,15 @@ type Client struct {
 
 	// HandshakeTopic topic used to send handshake
 	HandshakeTopic string `json:"handshake_topic"`
+
+	// responsesDelivered counts number of responses delivered
+	responsesDelivered int
+
+	// deliveredRequests increases the number of delivered requests
+	deliveredRequests int
+
+	// clientMu is the interal mutex
+	clientMu *sync.Mutex
 }
 
 // ClientTopic struct contains name of topics used to make communications
@@ -127,6 +137,8 @@ func (c *Client) Setup() {
 		c.CmdTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDCmd))
 		c.OutputTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDOut))
 		c.HeartbeatTopic = fmt.Sprintf("%s/%s", c.BaseTopic, GetTopicNameByID(TopicIDHb))
+		c.responsesDelivered = 0
+		c.deliveredRequests = 0
 
 		// Configure logger
 		logFilename := fmt.Sprintf("client_%s.log", c.ID)
@@ -145,4 +157,28 @@ func (c *Client) Setup() {
 	}
 
 	log.Fatalf("[CRITICAL] You are trying to setup a client without ID configured")
+}
+
+func (c *Client) IncreaseResponsesDelivered() {
+	c.responsesDelivered++
+}
+
+func (c *Client) GetDeliveredResponses() int {
+	return c.responsesDelivered
+}
+
+func (c *Client) IncreaseDeliveredRequests() {
+	c.deliveredRequests++
+}
+
+func (c *Client) GetDeliveredRequests() int {
+	return c.deliveredRequests
+}
+
+func (c *Client) LockInstance() {
+	c.clientMu.Lock()
+}
+
+func (c *Client) UnlockInstance() {
+	c.clientMu.Unlock()
 }

@@ -111,10 +111,12 @@ func sendCommands() {
 			// Encode command
 			encodedCommand := string(encryptCommand(cmd))
 
-			fmt.Printf("command: %v\n", string(encodedCommand))
-
 			token := client.Publish(cl.CmdTopic, qosLevel, false, encodedCommand)
 			waitForToken(token)
+
+			// Command has been sent
+
+			cl.IncreaseDeliveredRequests()
 		}
 
 		// Notify controller that the command has been sent to all clients

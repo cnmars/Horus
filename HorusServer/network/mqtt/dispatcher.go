@@ -17,6 +17,10 @@ func dispatchMessage(msg *TranslatedMessage) {
 		return
 	}
 
+	// Performs a lock into instance
+	client.LockInstance()
+	defer client.UnlockInstance()
+
 	if msg.TopicName == client.CmdTopic {
 		// Just ignore echoed messages
 		return
@@ -35,16 +39,21 @@ func dispatchMessage(msg *TranslatedMessage) {
 
 		decryptedData, decodeFail := decodePayload(msg.Payload)
 		if decodeFail != nil {
-			// Payload is not base64 encoded. Just show it on screen
-			output.Printf("[ERROR] Failed to decode payload: %v", decodeFail)
 			showClientResponse(msg.Payload, client.Logger)
 		}
 
 		// removes padding
 		decryptedData = bytes.Trim(decryptedData, "\x00")
 		client.Logger.Printf("[OUTPUT] %v", string(decryptedData))
+		client.IncreaseResponsesDelivered()
 	} else {
 		output.Printf("[ERROR] Invalid subtopic detected: %v", msg.Subtopic)
+	}
+
+	// Checks if client is active
+	if client.GetDeliveredResponses() < client.GetDeliveredRequests() {
+		log.Printf("[INFO] Deleting inactive client: %v ...", client.ID)
+		database.DeleteClient(client.ID)
 	}
 }
 
